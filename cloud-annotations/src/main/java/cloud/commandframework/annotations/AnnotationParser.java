@@ -48,6 +48,9 @@ import cloud.commandframework.extra.confirmation.CommandConfirmationManager;
 import cloud.commandframework.meta.CommandMeta;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import io.leangen.geantyref.TypeToken;
+
+import java.util.function.Predicate;
+
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -85,6 +88,8 @@ public final class AnnotationParser<C> {
             @NonNull Queue<@NonNull String>, @NonNull ArgumentParseResult<Boolean>>>> preprocessorMappers;
     private final Map<Class<? extends Annotation>, BiFunction<? extends Annotation, Command.Builder<C>, Command.Builder<C>>>
             builderModifiers;
+    private final Map<Predicate<Method>, Function<MethodCommandExecutionHandler.CommandMethodContext<C>,
+            MethodCommandExecutionHandler<C>>> commandMethodFactories;
     private final Class<C> commandSenderClass;
     private final MetaFactory metaFactory;
     private final FlagExtractor flagExtractor;
@@ -110,6 +115,7 @@ public final class AnnotationParser<C> {
         this.annotationMappers = new HashMap<>();
         this.preprocessorMappers = new HashMap<>();
         this.builderModifiers = new HashMap<>();
+        this.commandMethodFactories = new HashMap<>();
         this.flagExtractor = new FlagExtractor(manager);
         this.registerAnnotationMapper(CommandDescription.class, d ->
                 ParserParameters.single(StandardParameters.DESCRIPTION, d.value()));
@@ -178,6 +184,31 @@ public final class AnnotationParser<C> {
             final @NonNull Class<A> clazz
     ) {
         return getMethodOrClassAnnotation(method, clazz) != null;
+    }
+
+    /**
+     * Returns the command manager that was used to create this parser
+     *
+     * @return Command manager
+     * @since 1.6.0
+     */
+    public @NonNull CommandManager<C> manager() {
+        return this.manager;
+    }
+
+    /**
+     * Registers a new command execution method factory. This allows for the registration of
+     * custom command method execution strategies.
+     *
+     * @param predicate The predicate that decides whether or not to apply the custom execution handler to the given method
+     * @param function The function that produces the command execution handler
+     * @since 1.6.0
+     */
+    public void registerCommandExecutionMethodFactory(
+            final @NonNull Predicate<@NonNull Method> predicate,
+            final @NonNull Function<MethodCommandExecutionHandler.CommandMethodContext<C>, MethodCommandExecutionHandler<C>> function
+    ) {
+        this.commandMethodFactories.put(predicate, function);
     }
 
     /**
@@ -264,12 +295,6 @@ public final class AnnotationParser<C> {
             }
             if (!method.isAccessible()) {
                 method.setAccessible(true);
-            }
-            if (method.getReturnType() != Void.TYPE) {
-                throw new IllegalArgumentException(String.format(
-                        "@CommandMethod annotated method '%s' has non-void return type",
-                        method.getName()
-                ));
             }
             if (Modifier.isStatic(method.getModifiers())) {
                 throw new IllegalArgumentException(String.format(
@@ -460,13 +485,27 @@ public final class AnnotationParser<C> {
                 builder = builder.senderType(senderType);
             }
             try {
-                /* Construct the handler */
-                final CommandExecutionHandler<C> commandExecutionHandler = new MethodCommandExecutionHandler<>(
+                final MethodCommandExecutionHandler.CommandMethodContext<C> context =
+                        new MethodCommandExecutionHandler.CommandMethodContext<>(
                         instance,
                         commandArguments,
                         method,
                         this.getParameterInjectorRegistry()
                 );
+
+                /* Create the command execution handler */
+                CommandExecutionHandler<C> commandExecutionHandler = new MethodCommandExecutionHandler<>(context);
+                for (final Map.Entry<Predicate<Method>, Function<MethodCommandExecutionHandler.CommandMethodContext<C>,
+                        MethodCommandExecutionHandler<C>>> entry
+                        : this.commandMethodFactories.entrySet()) {
+                    if (entry.getKey().test(method)) {
+                        commandExecutionHandler = entry.getValue().apply(context);
+
+                        /* Once we have our custom handler, we stop */
+                        break;
+                    }
+                }
+
                 builder = builder.handler(commandExecutionHandler);
             } catch (final Exception e) {
                 throw new RuntimeException("Failed to construct command execution handler", e);

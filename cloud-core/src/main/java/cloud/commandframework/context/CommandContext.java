@@ -35,6 +35,7 @@ import cloud.commandframework.captions.SimpleCaptionVariableReplacementHandler;
 import cloud.commandframework.keys.CloudKey;
 import cloud.commandframework.keys.CloudKeyHolder;
 import cloud.commandframework.keys.SimpleCloudKey;
+import cloud.commandframework.permission.CommandPermission;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -150,6 +151,28 @@ public final class CommandContext<C> {
      */
     public @NonNull C getSender() {
         return this.commandSender;
+    }
+
+    /**
+     * Check whether the sender that executed the command has a permission.
+     *
+     * @param permission The permission
+     * @return Command sender
+     * @since 1.6.0
+     */
+    public boolean hasPermission(final @NonNull CommandPermission permission) {
+        return this.commandManager.hasPermission(this.commandSender, permission);
+    }
+
+    /**
+     * Check whether the sender that executed the command has a permission.
+     *
+     * @param permission The permission
+     * @return Command sender
+     * @since 1.6.0
+     */
+    public boolean hasPermission(final @NonNull String permission) {
+        return this.commandManager.hasPermission(this.commandSender, permission);
     }
 
     /**
@@ -514,7 +537,7 @@ public final class CommandContext<C> {
     }
 
     /**
-     * Get the raw input. This should only be used when {@link #isSuggestions()} is {@code true}
+     * Get the raw input.
      *
      * @return Raw input in token form
      */

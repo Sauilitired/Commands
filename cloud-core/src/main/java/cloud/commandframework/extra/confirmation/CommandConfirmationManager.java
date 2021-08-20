@@ -31,6 +31,9 @@ import cloud.commandframework.meta.CommandMeta;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import cloud.commandframework.services.types.ConsumerService;
 import cloud.commandframework.types.tuples.Pair;
+
+import java.util.concurrent.CompletableFuture;
+
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.LinkedHashMap;
@@ -158,19 +161,19 @@ public class CommandConfirmationManager<C> {
      * @return Handler for a confirmation command
      */
     public @NonNull CommandExecutionHandler<C> createConfirmationExecutionHandler() {
-        return context -> {
+        return (CommandExecutionHandler.FutureCommandExecutionHandler<C>) context -> {
             final Optional<CommandPostprocessingContext<C>> pending = this.getPending(context.getSender());
             if (pending.isPresent()) {
                 final CommandPostprocessingContext<C> postprocessingContext = pending.get();
-                postprocessingContext.getCommand()
+                return postprocessingContext.getCommand()
                         .getCommandExecutionHandler()
-                        .execute(postprocessingContext.getCommandContext());
+                        .executeFuture(postprocessingContext.getCommandContext());
             } else {
                 this.errorNotifier.accept(context.getSender());
             }
+            return CompletableFuture.completedFuture(null);
         };
     }
-
 
     private final class CommandConfirmationPostProcessor implements CommandPostprocessor<C> {
 

@@ -30,7 +30,7 @@ tasks {
     }
 
     val pluginJar = shadowJar.map { it.outputs }
-    val spongeRunFiles = velocityRunClasspath.asFileTree
+    val velocityRunFiles = velocityRunClasspath.asFileTree
     register("runVelocity", JavaExec::class) {
         group = "cloud"
         description = "Spin up a Velocity server environment"
@@ -39,7 +39,7 @@ tasks {
 
         inputs.files(pluginJar)
 
-        classpath(spongeRunFiles)
+        classpath(velocityRunFiles)
         workingDir = layout.projectDirectory.dir("run").asFile
 
         doFirst {
@@ -64,5 +64,5 @@ dependencies {
     api(project(":cloud-minecraft-extras"))
     api(project(":cloud-annotations"))
     annotationProcessor(compileOnly("com.velocitypowered", "velocity-api", Versions.velocityApi))
-    velocityRunClasspath("com.velocitypowered", "velocity-proxy", "1.1.3")
+    velocityRunClasspath("com.velocitypowered", "velocity-proxy", "3.0.0")
 }

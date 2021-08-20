@@ -25,7 +25,11 @@ package cloud.commandframework.execution;
 
 import cloud.commandframework.Command;
 import cloud.commandframework.context.CommandContext;
+
+import java.util.concurrent.CompletableFuture;
+
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Handler that is invoked whenever a {@link Command} is executed
@@ -43,6 +47,24 @@ public interface CommandExecutionHandler<C> {
      */
     void execute(@NonNull CommandContext<C> commandContext);
 
+    /**
+     * Handle command execution
+     *
+     * @param commandContext Command context
+     * @return future that completes when the command has finished execution
+     * @since 1.6.0
+     */
+    default CompletableFuture<@Nullable Object> executeFuture(@NonNull CommandContext<C> commandContext) {
+        final CompletableFuture<Object> future = new CompletableFuture<>();
+        try {
+            this.execute(commandContext);
+            /* The command executed successfully */
+            future.complete(null);
+        } catch (final Throwable throwable) {
+            future.completeExceptionally(throwable);
+        }
+        return future;
+    }
 
     /**
      * Command execution handler that does nothing
@@ -54,6 +76,30 @@ public interface CommandExecutionHandler<C> {
         @Override
         public void execute(final @NonNull CommandContext<C> commandContext) {
         }
+
+    }
+
+    /**
+     * Handler that is invoked whenever a {@link Command} is executed
+     * by a command sender
+     *
+     * @param <C> Command sender type
+     * @since 1.6.0
+     */
+    @FunctionalInterface
+    interface FutureCommandExecutionHandler<C> extends CommandExecutionHandler<C> {
+
+        @Override
+        @SuppressWarnings("FunctionalInterfaceMethodChanged")
+        default void execute(
+                @NonNull CommandContext<C> commandContext
+        ) {
+        }
+
+        @Override
+        CompletableFuture<@Nullable Object> executeFuture(
+                @NonNull CommandContext<C> commandContext
+        );
 
     }
 

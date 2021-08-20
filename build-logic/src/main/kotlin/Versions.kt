@@ -16,7 +16,7 @@ object Versions {
     const val commodore = "1.10"
     const val bungeecord = "1.8-SNAPSHOT"
     const val cloudburst = "1.0.0-SNAPSHOT"
-    const val adventureApi = "4.7.0"
+    const val adventureApi = "4.8.1"
     const val adventurePlatform = "4.0.0-SNAPSHOT"
     const val paperApi = "1.15.2-R0.1-SNAPSHOT"
     const val velocityApi = "1.1.0"

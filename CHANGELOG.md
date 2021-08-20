@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0]
+
+### Added
+- Kotlin: Support for suspending command functions using `AnnotationParser<C>.installCoroutineSupport()`
+- Flags can be bound to a permission
+
+### Changed
+- Added `executeFuture` to `CommandExecutionHandler` which is now used internally. By default, this delegates to the old 
+  `execute` method
+
 ## [1.5.0]
 
 ### Added

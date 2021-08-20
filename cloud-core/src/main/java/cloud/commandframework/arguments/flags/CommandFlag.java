@@ -25,6 +25,8 @@ package cloud.commandframework.arguments.flags;
 
 import cloud.commandframework.ArgumentDescription;
 import cloud.commandframework.arguments.CommandArgument;
+import cloud.commandframework.permission.CommandPermission;
+import cloud.commandframework.permission.Permission;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -47,6 +49,7 @@ public final class CommandFlag<T> {
     private final @NonNull String name;
     private final @NonNull String @NonNull [] aliases;
     private final @NonNull ArgumentDescription description;
+    private final @NonNull CommandPermission permission;
 
     private final @Nullable CommandArgument<?, T> commandArgument;
 
@@ -54,11 +57,13 @@ public final class CommandFlag<T> {
             final @NonNull String name,
             final @NonNull String @NonNull [] aliases,
             final @NonNull ArgumentDescription description,
+            final @NonNull CommandPermission permission,
             final @Nullable CommandArgument<?, T> commandArgument
     ) {
         this.name = Objects.requireNonNull(name, "name cannot be null");
         this.aliases = Objects.requireNonNull(aliases, "aliases cannot be null");
         this.description = Objects.requireNonNull(description, "description cannot be null");
+        this.permission = Objects.requireNonNull(permission, "permission cannot be null");
         this.commandArgument = commandArgument;
     }
 
@@ -125,6 +130,16 @@ public final class CommandFlag<T> {
         return this.commandArgument;
     }
 
+    /**
+     * Get the command permission, if it exists
+     *
+     * @return Command permission, or {@code null}
+     * @since 1.6.0
+     */
+    public CommandPermission getCommandPermission() {
+        return this.permission;
+    }
+
     @Override
     public String toString() {
         return String.format("--%s", this.name);
@@ -153,22 +168,25 @@ public final class CommandFlag<T> {
         private final String name;
         private final String[] aliases;
         private final ArgumentDescription description;
+        private final CommandPermission permission;
         private final CommandArgument<?, T> commandArgument;
 
         private Builder(
                 final @NonNull String name,
                 final @NonNull String[] aliases,
                 final @NonNull ArgumentDescription description,
+                final @NonNull CommandPermission permission,
                 final @Nullable CommandArgument<?, T> commandArgument
         ) {
             this.name = name;
             this.aliases = aliases;
             this.description = description;
+            this.permission = permission;
             this.commandArgument = commandArgument;
         }
 
         private Builder(final @NonNull String name) {
-            this(name, new String[0], ArgumentDescription.empty(), null);
+            this(name, new String[0], ArgumentDescription.empty(), Permission.empty(), null);
         }
 
         /**
@@ -198,6 +216,7 @@ public final class CommandFlag<T> {
                     this.name,
                     filteredAliases.toArray(new String[0]),
                     this.description,
+                    this.permission,
                     this.commandArgument
             );
         }
@@ -214,7 +233,7 @@ public final class CommandFlag<T> {
             return this.withDescription((ArgumentDescription) description);
         }
 
-        /**d
+        /**
          * Create a new builder instance using the given flag description
          *
          * @param description Flag description
@@ -222,7 +241,7 @@ public final class CommandFlag<T> {
          * @since 1.4.0
          */
         public Builder<T> withDescription(final @NonNull ArgumentDescription description) {
-            return new Builder<>(this.name, this.aliases, description, this.commandArgument);
+            return new Builder<>(this.name, this.aliases, description, this.permission, this.commandArgument);
         }
 
         /**
@@ -233,7 +252,7 @@ public final class CommandFlag<T> {
          * @return New builder instance
          */
         public <N> Builder<N> withArgument(final @NonNull CommandArgument<?, N> argument) {
-            return new Builder<>(this.name, this.aliases, this.description, argument);
+            return new Builder<>(this.name, this.aliases, this.description, this.permission, argument);
         }
 
         /**
@@ -248,12 +267,23 @@ public final class CommandFlag<T> {
         }
 
         /**
+         * Create a new builder instance using the given flag permission
+         *
+         * @param permission Flag permission
+         * @return New builder instance
+         * @since 1.6.0
+         */
+        public Builder<T> withPermission(final @NonNull CommandPermission permission) {
+            return new Builder<>(this.name, this.aliases, this.description, permission, this.commandArgument);
+        }
+
+        /**
          * Build a new command flag instance
          *
          * @return Constructed instance
          */
         public @NonNull CommandFlag<T> build() {
-            return new CommandFlag<>(this.name, this.aliases, this.description, this.commandArgument);
+            return new CommandFlag<>(this.name, this.aliases, this.description, this.permission, this.commandArgument);
         }
 
     }

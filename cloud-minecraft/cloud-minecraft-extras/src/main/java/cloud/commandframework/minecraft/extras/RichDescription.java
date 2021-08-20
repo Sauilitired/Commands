@@ -26,7 +26,6 @@ package cloud.commandframework.minecraft.extras;
 import cloud.commandframework.ArgumentDescription;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
-import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 import net.kyori.adventure.translation.GlobalTranslator;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -112,7 +111,8 @@ public final class RichDescription implements ArgumentDescription {
     @Override
     @Deprecated
     public @NonNull String getDescription() {
-        return PlainComponentSerializer.plain().serialize(GlobalTranslator.render(this.contents, Locale.getDefault()));
+        return net.kyori.adventure.text.serializer.plain.PlainComponentSerializer.plain()
+                .serialize(GlobalTranslator.render(this.contents, Locale.getDefault()));
     }
 
     /**

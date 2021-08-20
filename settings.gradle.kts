@@ -13,6 +13,8 @@ plugins {
 
 rootProject.name = "cloud"
 
+include(":cloud-bom")
+
 // Core Modules
 include(":cloud-core")
 include(":cloud-services")

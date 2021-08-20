@@ -4,12 +4,14 @@ plugins {
 }
 
 group = "cloud.commandframework"
-version = "1.5.0"
+version = "1.6.0-SNAPSHOT"
 description = "Command framework and dispatcher for the JVM"
 
 subprojects {
-    plugins.apply("cloud.base-conventions")
+    if (name != "cloud-bom") {
+        apply(plugin = "cloud.base-conventions")
+    }
     if (!name.startsWith("example-")) {
-        plugins.apply("cloud.publishing")
+        apply(plugin = "cloud.publishing-conventions")
     }
 }

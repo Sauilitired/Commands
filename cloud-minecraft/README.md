@@ -24,14 +24,14 @@ mappings will be available.
 <dependency>
     <groupId>cloud.commandframework</groupId>
     <artifactId>cloud-bukkit</artifactId>
-    <version>1.5.0</version>
+    <version>1.6.0-SNAPSHOT</version>
 </dependency>
 ```
 
 **gradle**:
 ```groovy
 dependencies {
-    implementation 'cloud.commandframework:cloud-bukkit:1.5.0'
+    implementation 'cloud.commandframework:cloud-bukkit:1.6.0-SNAPSHOT'
 }
 ```
 
@@ -93,14 +93,14 @@ mappings are available even without commodore present.
 <dependency>
     <groupId>cloud.commandframework</groupId>
     <artifactId>cloud-paper</artifactId>
-    <version>1.5.0</version>
+    <version>1.6.0-SNAPSHOT</version>
 </dependency>
 ```
 
 **gradle**:
 ```groovy
 dependencies {
-    implementation 'cloud.commandframework:cloud-paper:1.5.0'
+    implementation 'cloud.commandframework:cloud-paper:1.6.0-SNAPSHOT'
 }
 ```
 
@@ -118,14 +118,14 @@ BungeeCord mappings for cloud.
 <dependency>
     <groupId>cloud.commandframework</groupId>
     <artifactId>cloud-bungee</artifactId>
-    <version>1.5.0</version>
+    <version>1.6.0-SNAPSHOT</version>
 </dependency>
 ```
 
 **gradle**:
 ```groovy
 dependencies {
-    implementation 'cloud.commandframework:cloud-bungee:1.5.0'
+    implementation 'cloud.commandframework:cloud-bungee:1.6.0-SNAPSHOT'
 }
 ```
 
@@ -150,14 +150,14 @@ cloud mappings for Velocity 1.1.0.
 <dependency>
     <groupId>cloud.commandframework</groupId>
     <artifactId>cloud-velocity</artifactId>
-    <version>1.5.0</version>
+    <version>1.6.0-SNAPSHOT</version>
 </dependency>
 ```
 
 **gradle**:
 ```groovy
 dependencies {
-    implementation 'cloud.commandframework:cloud-velocity:1.5.0'
+    implementation 'cloud.commandframework:cloud-velocity:1.6.0-SNAPSHOT'
 }
 ```
 
@@ -181,14 +181,14 @@ cloud mappings for CloudBurst 1.0.0-SNAPSHOT.
 <dependency>
     <groupId>cloud.commandframework</groupId>
     <artifactId>cloud-cloudburst</artifactId>
-    <version>1.5.0</version>
+    <version>1.6.0-SNAPSHOT</version>
 </dependency>
 ```
 
 **gradle**:
 ```groovy
 dependencies {
-    implementation 'cloud.commandframework:cloud-velocity:1.5.0'
+    implementation 'cloud.commandframework:cloud-velocity:1.6.0-SNAPSHOT'
 }
 ```
 
@@ -212,7 +212,7 @@ cloud mappings for the Fabric mod loader for Minecraft 1.16+
 **gradle**:
 ```groovy
 dependencies {
-    modImplementation 'cloud.commandframework:cloud-fabric:1.5.0'
+    modImplementation 'cloud.commandframework:cloud-fabric:1.6.0-SNAPSHOT'
 }
 ```
 

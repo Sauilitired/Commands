@@ -28,6 +28,7 @@ import cloud.commandframework.CommandManager;
 import cloud.commandframework.annotations.parsers.Parser;
 import cloud.commandframework.annotations.specifier.Range;
 import cloud.commandframework.annotations.suggestions.Suggestions;
+import cloud.commandframework.arguments.StaticArgument;
 import cloud.commandframework.arguments.parser.ArgumentParser;
 import cloud.commandframework.arguments.parser.ParserParameters;
 import cloud.commandframework.arguments.standard.IntegerArgument;
@@ -35,6 +36,11 @@ import cloud.commandframework.arguments.standard.StringArgument;
 import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import io.leangen.geantyref.TypeToken;
+
+import java.util.HashSet;
+
+import java.util.Set;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -173,6 +179,26 @@ class AnnotationParserTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked_cast")
+    void testMultiAliasedCommands() {
+        final Collection<Command<TestCommandSender>> commands = annotationParser.parse(new AliasedCommands());
+
+        // Find the root command that we are looking for.
+        for (final Command<TestCommandSender> command : commands) {
+            final StaticArgument<?> argument = (StaticArgument<?>) command.getArguments().get(0);
+
+            if (argument.getAliases().contains("acommand")) {
+                final Set<String> requiredAliases = new HashSet<>(Arrays.asList("acommand", "analias", "anotheralias"));
+                Assertions.assertEquals(requiredAliases, argument.getAliases());
+
+                return;
+            }
+        }
+
+        throw new IllegalStateException("Couldn't find the root command 'acommand'");
+    }
+
+    @Test
     void testInjectedCommand() {
         manager.executeCommand(new TestCommandSender(), "injected 10").join();
     }
@@ -305,6 +331,25 @@ class AnnotationParserTest {
          * @return Integer argument name
          */
         String value() default "number";
+
+    }
+
+
+    private static final class AliasedCommands {
+
+        private static final String COMMAND_ALIASES = "acommand|analias|anotheralias";
+
+        @CommandMethod("acommand")
+        public void commandOne() {
+        }
+
+        @CommandMethod(COMMAND_ALIASES + " sub1")
+        public void commandTwo() {
+        }
+
+        @CommandMethod(COMMAND_ALIASES + " sub2")
+        public void commandThree() {
+        }
 
     }
 

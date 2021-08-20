@@ -81,13 +81,15 @@ public final class AsynchronousCommandExecutionCoordinator<C> extends CommandExe
 
         final Consumer<Command<C>> commandConsumer = command -> {
             if (this.commandManager.postprocessContext(commandContext, command) == State.ACCEPTED) {
-                try {
-                    command.getCommandExecutionHandler().execute(commandContext);
-                } catch (final CommandExecutionException exception) {
-                    resultFuture.completeExceptionally(exception);
-                } catch (final Exception exception) {
-                    resultFuture.completeExceptionally(new CommandExecutionException(exception, commandContext));
-                }
+                command.getCommandExecutionHandler().executeFuture(commandContext).whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        if (throwable instanceof CommandExecutionException) {
+                            resultFuture.completeExceptionally(throwable);
+                        } else {
+                            resultFuture.completeExceptionally(new CommandExecutionException(throwable, commandContext));
+                        }
+                    }
+                });
             }
         };
 

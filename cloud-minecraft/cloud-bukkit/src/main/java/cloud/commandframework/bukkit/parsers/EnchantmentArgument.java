@@ -144,11 +144,15 @@ public class EnchantmentArgument<C> extends CommandArgument<C, Enchantment> {
             }
 
             final NamespacedKey key;
-            if (input.contains(":")) {
-                final String[] splitInput = input.split(":");
-                key = new NamespacedKey(splitInput[0], splitInput[1]);
-            } else {
-                key = NamespacedKey.minecraft(input);
+            try {
+                if (input.contains(":")) {
+                    final String[] splitInput = input.split(":");
+                    key = new NamespacedKey(splitInput[0], splitInput[1]);
+                } else {
+                    key = NamespacedKey.minecraft(input);
+                }
+            } catch (final Exception ex) {
+                return ArgumentParseResult.failure(new EnchantmentParseException(input, commandContext));
             }
 
             final Enchantment enchantment = Enchantment.getByKey(key);

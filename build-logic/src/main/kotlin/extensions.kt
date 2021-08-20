@@ -9,4 +9,6 @@ val Project.ci: Provider<Boolean>
             .orElse(false)
 
 val Project.compileExamples: Boolean
-    get() = hasProperty("compile-examples")
+    get() = providers.gradleProperty("compile-examples")
+            .forUseAtConfigurationTime()
+            .isPresent

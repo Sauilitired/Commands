@@ -65,6 +65,12 @@ public final class StandardParameters {
      * @since 1.5.0
      */
     public static final ParserParameter<Boolean> QUOTED = create("quoted", TypeToken.get(Boolean.class));
+    /**
+     * Indicates that a boolean argument should be liberal.
+     *
+     * @since 1.6.0
+     */
+    public static final ParserParameter<Boolean> LIBERAL = create("liberal", TypeToken.get(Boolean.class));
 
     private StandardParameters() {
     }

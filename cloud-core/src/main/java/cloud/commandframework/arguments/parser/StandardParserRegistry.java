@@ -24,6 +24,7 @@
 package cloud.commandframework.arguments.parser;
 
 import cloud.commandframework.annotations.specifier.Greedy;
+import cloud.commandframework.annotations.specifier.Liberal;
 import cloud.commandframework.annotations.specifier.Quoted;
 import cloud.commandframework.annotations.specifier.Range;
 import cloud.commandframework.arguments.standard.BooleanArgument;
@@ -98,6 +99,10 @@ public final class StandardParserRegistry<C> implements ParserRegistry<C> {
                 Quoted.class,
                 (quoted, typeToken) -> ParserParameters.single(StandardParameters.QUOTED, true)
         );
+        this.<Liberal, Boolean>registerAnnotationMapper(
+                Liberal.class,
+                (liberal, typeToken) -> ParserParameters.single(StandardParameters.LIBERAL, true)
+        );
 
         /* Register standard types */
         this.registerParserSupplier(TypeToken.get(Byte.class), options ->
@@ -154,8 +159,10 @@ public final class StandardParserRegistry<C> implements ParserRegistry<C> {
                     (context, s) -> Arrays.asList(options.get(StandardParameters.COMPLETIONS, new String[0]))
             );
         });
-        /* Add options to this */
-        this.registerParserSupplier(TypeToken.get(Boolean.class), options -> new BooleanArgument.BooleanParser<>(false));
+        this.registerParserSupplier(TypeToken.get(Boolean.class), options -> {
+            final boolean liberal = options.get(StandardParameters.LIBERAL, false);
+            return new BooleanArgument.BooleanParser<>(liberal);
+        });
         this.registerParserSupplier(TypeToken.get(UUID.class), options -> new UUIDArgument.UUIDParser<>());
     }
 

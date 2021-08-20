@@ -40,14 +40,15 @@ import kotlin.reflect.KClass
  * @since 1.3.0
  */
 @Suppress("DEPRECATION")
-@Deprecated(message = "ArgumentDescription should be used over Description", level = DeprecationLevel.HIDDEN)
+@Deprecated(
+    message = "ArgumentDescription should be used over Description",
+    level = DeprecationLevel.HIDDEN)
 public fun <C : Any> CommandManager<C>.commandBuilder(
-        name: String,
-        description: Description = Description.empty(),
-        aliases: Array<String> = emptyArray(),
-        lambda: MutableCommandBuilder<C>.() -> Unit
-): MutableCommandBuilder<C> =
-        MutableCommandBuilder(name, description, aliases, this, lambda)
+    name: String,
+    description: Description = Description.empty(),
+    aliases: Array<String> = emptyArray(),
+    lambda: MutableCommandBuilder<C>.() -> Unit
+): MutableCommandBuilder<C> = MutableCommandBuilder(name, description, aliases, this, lambda)
 
 /**
  * Create a new [MutableCommandBuilder] and invoke the provided receiver lambda on it
@@ -59,16 +60,15 @@ public fun <C : Any> CommandManager<C>.commandBuilder(
  * @since 1.4.0
  */
 public fun <C : Any> CommandManager<C>.commandBuilder(
-        name: String,
-        description: ArgumentDescription = ArgumentDescription.empty(),
-        aliases: Array<String> = emptyArray(),
-        lambda: MutableCommandBuilder<C>.() -> Unit
-): MutableCommandBuilder<C> =
-        MutableCommandBuilder(name, description, aliases, this, lambda)
+    name: String,
+    description: ArgumentDescription = ArgumentDescription.empty(),
+    aliases: Array<String> = emptyArray(),
+    lambda: MutableCommandBuilder<C>.() -> Unit
+): MutableCommandBuilder<C> = MutableCommandBuilder(name, description, aliases, this, lambda)
 
 /**
- * Create a new [MutableCommandBuilder] which will invoke the provided receiver lambda, and then register itself with the
- * owning [CommandManager]
+ * Create a new [MutableCommandBuilder] which will invoke the provided receiver lambda, and then
+ * register itself with the owning [CommandManager]
  *
  * @param name name for the root command node
  * @param description description for the root command node
@@ -77,18 +77,19 @@ public fun <C : Any> CommandManager<C>.commandBuilder(
  * @since 1.3.0
  */
 @Suppress("DEPRECATION")
-@Deprecated(message = "ArgumentDescription should be used over Description", level = DeprecationLevel.HIDDEN)
+@Deprecated(
+    message = "ArgumentDescription should be used over Description",
+    level = DeprecationLevel.HIDDEN)
 public fun <C : Any> CommandManager<C>.buildAndRegister(
-        name: String,
-        description: Description = Description.empty(),
-        aliases: Array<String> = emptyArray(),
-        lambda: MutableCommandBuilder<C>.() -> Unit
-): MutableCommandBuilder<C> =
-        commandBuilder(name, description, aliases, lambda).register()
+    name: String,
+    description: Description = Description.empty(),
+    aliases: Array<String> = emptyArray(),
+    lambda: MutableCommandBuilder<C>.() -> Unit
+): MutableCommandBuilder<C> = commandBuilder(name, description, aliases, lambda).register()
 
 /**
- * Create a new [MutableCommandBuilder] which will invoke the provided receiver lambda, and then register itself with the
- * owning [CommandManager]
+ * Create a new [MutableCommandBuilder] which will invoke the provided receiver lambda, and then
+ * register itself with the owning [CommandManager]
  *
  * @param name name for the root command node
  * @param description description for the root command node
@@ -97,15 +98,15 @@ public fun <C : Any> CommandManager<C>.buildAndRegister(
  * @since 1.4.0
  */
 public fun <C : Any> CommandManager<C>.buildAndRegister(
-        name: String,
-        description: ArgumentDescription = ArgumentDescription.empty(),
-        aliases: Array<String> = emptyArray(),
-        lambda: MutableCommandBuilder<C>.() -> Unit
-): MutableCommandBuilder<C> =
-        commandBuilder(name, description, aliases, lambda).register()
+    name: String,
+    description: ArgumentDescription = ArgumentDescription.empty(),
+    aliases: Array<String> = emptyArray(),
+    lambda: MutableCommandBuilder<C>.() -> Unit
+): MutableCommandBuilder<C> = commandBuilder(name, description, aliases, lambda).register()
 
 /**
- * Build the provided [MutableCommandBuilder]s into [Command]s, and then register them with the command manager
+ * Build the provided [MutableCommandBuilder]s into [Command]s, and then register them with the
+ * command manager
  *
  * @param commands mutable command builder(s) to register
  * @return the command manager
@@ -113,13 +114,8 @@ public fun <C : Any> CommandManager<C>.buildAndRegister(
  * @since 1.3.0
  */
 public fun <C : Any> CommandManager<C>.command(
-        vararg commands: MutableCommandBuilder<C>
-): CommandManager<C> =
-        apply {
-            commands.forEach { command ->
-                this.command(command.build())
-            }
-        }
+    vararg commands: MutableCommandBuilder<C>
+): CommandManager<C> = apply { commands.forEach { command -> this.command(command.build()) } }
 
 /**
  * Specify a required sender type
@@ -129,7 +125,7 @@ public fun <C : Any> CommandManager<C>.command(
  * @since 1.3.0
  */
 public fun <C : Any> Command.Builder<C>.senderType(type: KClass<out C>): Command.Builder<C> =
-        senderType(type.java)
+    senderType(type.java)
 
 /**
  * Get a [Description], defaulting to [Description.empty]
@@ -140,13 +136,10 @@ public fun <C : Any> Command.Builder<C>.senderType(type: KClass<out C>): Command
  */
 @Suppress("DEPRECATION")
 @Deprecated(
-        message = "Use interface variant that allows for rich text",
-        replaceWith = ReplaceWith("argumentDescription(description)")
-)
-public fun description(
-        description: String = ""
-): Description =
-        if (description.isEmpty()) Description.empty() else Description.of(description)
+    message = "Use interface variant that allows for rich text",
+    replaceWith = ReplaceWith("argumentDescription(description)"))
+public fun description(description: String = ""): Description =
+    if (description.isEmpty()) Description.empty() else Description.of(description)
 
 /**
  * Get a [ArgumentDescription], defaulting to [ArgumentDescription.empty]
@@ -155,7 +148,5 @@ public fun description(
  * @return the description
  * @since 1.4.0
  */
-public fun argumentDescription(
-        description: String = ""
-): ArgumentDescription =
-        if (description.isEmpty()) ArgumentDescription.empty() else ArgumentDescription.of(description)
+public fun argumentDescription(description: String = ""): ArgumentDescription =
+    if (description.isEmpty()) ArgumentDescription.empty() else ArgumentDescription.of(description)

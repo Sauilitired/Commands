@@ -30,6 +30,7 @@ import cloud.commandframework.arguments.flags.CommandFlag;
 import cloud.commandframework.arguments.parser.ArgumentParser;
 import cloud.commandframework.arguments.parser.ParserParameters;
 import cloud.commandframework.arguments.parser.ParserRegistry;
+import cloud.commandframework.permission.Permission;
 import io.leangen.geantyref.TypeToken;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -61,7 +62,8 @@ final class FlagExtractor implements Function<@NonNull Method, Collection<@NonNu
             final CommandFlag.Builder<Void> builder = this.commandManager
                     .flagBuilder(flag.value())
                     .withDescription(ArgumentDescription.of(flag.description()))
-                    .withAliases(flag.aliases());
+                    .withAliases(flag.aliases())
+                    .withPermission(Permission.of(flag.permission()));
             if (parameter.getType().equals(boolean.class)) {
                 flags.add(builder.build());
             } else {

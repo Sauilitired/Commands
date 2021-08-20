@@ -51,7 +51,8 @@ import java.util.function.Function;
 @Plugin(
         id = "example-plugin",
         name = "Cloud example plugin",
-        version = "1.2.0"
+        authors = "Cloud Team",
+        version = "1.6.0"
 )
 public final class ExampleVelocityPlugin {
 
@@ -80,7 +81,6 @@ public final class ExampleVelocityPlugin {
         new MinecraftExceptionHandler<CommandSource>()
                 .withDefaultHandlers()
                 .withDecorator(component -> Component.text()
-                        .color(NamedTextColor.WHITE)
                         .append(Component.text('['))
                         .append(Component.text("cloud-velocity-example", TextColor.color(0x1CBAE0)))
                         .append(Component.text("] "))

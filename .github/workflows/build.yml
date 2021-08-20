@@ -1,8 +1,8 @@
 name: Build Cloud
 on:
   push:
-    branches: "*"
-    tags-ignore: [ "*" ]
+    branches: [ "**" ]
+    tags-ignore: [ "**" ]
   pull_request:
   release:
     types: [ released ]

@@ -40,26 +40,26 @@ class CommandBuildingDSLTest {
         val manager = TestCommandManager()
 
         manager.command(
-                manager.commandBuilder("kotlin", aliases = arrayOf("alias")) {
-                    permission = "permission"
-                    senderType<SpecificCommandSender>()
+            manager.commandBuilder("kotlin", aliases = arrayOf("alias")) {
+                permission = "permission"
+                senderType<SpecificCommandSender>()
 
-                    literal("dsl")
-                    argument(argumentDescription("An amazing command argument")) {
-                        StringArgument.of("moment")
-                    }
-                    handler {
-                        // ...
-                    }
+                literal("dsl")
+                argument(argumentDescription("An amazing command argument")) {
+                    StringArgument.of("moment")
+                }
+                handler {
+                    // ...
+                }
 
-                    manager.command(copy {
+                manager.command(
+                    copy {
                         literal("bruh_moment")
                         handler {
                             // ...
                         }
                     })
-                }
-        )
+            })
 
         manager.buildAndRegister("is") {
             commandDescription("Command description")
@@ -83,21 +83,22 @@ class CommandBuildingDSLTest {
         manager.executeCommand(SpecificCommandSender(), "kotlin dsl time bruh_moment")
 
         Assertions.assertEquals(
-                manager.commandHelpHandler.allCommands.map { it.syntaxString }.sorted(),
-                setOf(
-                        "kotlin dsl <moment>",
-                        "kotlin dsl <moment> bruh_moment",
-                        "is",
-                        "is this",
-                        "is this going",
-                        "is this going too_far",
-                ).sorted()
-        )
+            manager.commandHelpHandler.allCommands.map { it.syntaxString }.sorted(),
+            setOf(
+                    "kotlin dsl <moment>",
+                    "kotlin dsl <moment> bruh_moment",
+                    "is",
+                    "is this",
+                    "is this going",
+                    "is this going too_far",
+                )
+                .sorted())
     }
 
-    class TestCommandManager : CommandManager<TestCommandSender>(
-            CommandExecutionCoordinator.simpleCoordinator(), CommandRegistrationHandler.nullCommandRegistrationHandler()
-    ) {
+    class TestCommandManager :
+        CommandManager<TestCommandSender>(
+            CommandExecutionCoordinator.simpleCoordinator(),
+            CommandRegistrationHandler.nullCommandRegistrationHandler()) {
         override fun createDefaultCommandMeta(): SimpleCommandMeta {
             return SimpleCommandMeta.empty()
         }
@@ -109,5 +110,4 @@ class CommandBuildingDSLTest {
 
     open class TestCommandSender
     class SpecificCommandSender : TestCommandSender()
-
 }

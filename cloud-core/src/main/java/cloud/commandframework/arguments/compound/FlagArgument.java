@@ -218,7 +218,7 @@ public final class FlagArgument<C> extends CommandArgument<C, Object> {
                 final List<String> strings = new LinkedList<>();
                 /* Recommend "primary" flags */
                 for (final CommandFlag<?> flag : this.flags) {
-                    if (usedFlags.contains(flag)) {
+                    if (usedFlags.contains(flag) || !commandContext.hasPermission(flag.getCommandPermission())) {
                         continue;
                     }
                     strings.add(
@@ -231,7 +231,7 @@ public final class FlagArgument<C> extends CommandArgument<C, Object> {
                 /* Recommend aliases */
                 final boolean suggestCombined = input.length() > 1 && input.charAt(0) == '-' && input.charAt(1) != '-';
                 for (final CommandFlag<?> flag : this.flags) {
-                    if (usedFlags.contains(flag)) {
+                    if (usedFlags.contains(flag) || !commandContext.hasPermission(flag.getCommandPermission())) {
                         continue;
                     }
                     for (final String alias : flag.getAliases()) {
@@ -279,7 +279,9 @@ public final class FlagArgument<C> extends CommandArgument<C, Object> {
                         }
                     }
                 }
-                if (currentFlag != null && currentFlag.getCommandArgument() != null) {
+                if (currentFlag != null
+                        && commandContext.hasPermission(currentFlag.getCommandPermission())
+                        && currentFlag.getCommandArgument() != null) {
                     return (List<String>) ((BiFunction) currentFlag.getCommandArgument().getSuggestionsProvider())
                             .apply(commandContext, input);
                 }
@@ -353,6 +355,12 @@ public final class FlagArgument<C> extends CommandArgument<C, Object> {
                                                         FailureReason.DUPLICATE_FLAG,
                                                         commandContext
                                                 ));
+                                            } else if (!commandContext.hasPermission(flag.getCommandPermission())) {
+                                                return ArgumentParseResult.failure(new FlagParseException(
+                                                        string,
+                                                        FailureReason.NO_PERMISSION,
+                                                        commandContext
+                                                ));
                                             }
                                             parsedFlags.add(flag);
                                             commandContext.flags().addPresenceFlag(flag);
@@ -394,6 +402,12 @@ public final class FlagArgument<C> extends CommandArgument<C, Object> {
                                     FailureReason.DUPLICATE_FLAG,
                                     commandContext
                             ));
+                        } else if (!commandContext.hasPermission(currentFlag.getCommandPermission())) {
+                            return ArgumentParseResult.failure(new FlagParseException(
+                                    string,
+                                    FailureReason.NO_PERMISSION,
+                                    commandContext
+                            ));
                         }
                         parsedFlags.add(currentFlag);
                         if (currentFlag.getCommandArgument() == null) {
@@ -413,6 +427,15 @@ public final class FlagArgument<C> extends CommandArgument<C, Object> {
                             /* Mark this flag as the one currently being typed */
                             this.currentFlagBeingParsed = Optional.of(currentFlag);
                             this.currentFlagNameBeingParsed = Optional.of(currentFlagName);
+
+                            // Don't attempt to parse empty strings
+                            if (inputQueue.peek().isEmpty()) {
+                                return ArgumentParseResult.failure(new FlagParseException(
+                                        currentFlag.getName(),
+                                        FailureReason.MISSING_ARGUMENT,
+                                        commandContext
+                                ));
+                            }
 
                             final ArgumentParseResult<?> result =
                                     ((CommandArgument) currentFlag.getCommandArgument())
@@ -499,7 +522,8 @@ public final class FlagArgument<C> extends CommandArgument<C, Object> {
         UNKNOWN_FLAG(StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_FLAG_UNKNOWN_FLAG),
         DUPLICATE_FLAG(StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_FLAG_DUPLICATE_FLAG),
         NO_FLAG_STARTED(StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_FLAG_NO_FLAG_STARTED),
-        MISSING_ARGUMENT(StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_FLAG_MISSING_ARGUMENT);
+        MISSING_ARGUMENT(StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_FLAG_MISSING_ARGUMENT),
+        NO_PERMISSION(StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_FLAG_NO_PERMISSION);
 
         private final Caption caption;
 

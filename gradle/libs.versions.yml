@@ -13,10 +13,10 @@ versions:
 
   # build-logic
   checkstyle: 8.39
-  indra: 2.0.5
+  indra: 2.0.6
   testLoggerPlugin: 3.0.0
   errorpronePlugin: 2.0.1
-  licenser: 0.6.0
+  licenser: 0.6.1
 
 dependencies:
   checkerQual:
@@ -29,10 +29,10 @@ dependencies:
     group: net.kyori
     name: indra-common
     version: { ref: indra }
-  indraPublishingSonatype :
-    group : net.kyori
-    name : indra-publishing-sonatype
-    version : { ref : indra }
+  indraPublishingSonatype:
+    group: net.kyori
+    name: indra-publishing-sonatype
+    version: { ref: indra }
   licenser:
     group: gradle.plugin.org.cadixdev.gradle
     name: licenser

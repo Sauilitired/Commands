@@ -118,7 +118,7 @@ public abstract class CommandExecutionCoordinator<C> {
                     final Command<C> command = Objects.requireNonNull(pair.getFirst());
                     if (this.getCommandTree().getCommandManager().postprocessContext(commandContext, command) == State.ACCEPTED) {
                         try {
-                            command.getCommandExecutionHandler().execute(commandContext);
+                            command.getCommandExecutionHandler().executeFuture(commandContext).get();
                         } catch (final CommandExecutionException exception) {
                             completableFuture.completeExceptionally(exception);
                         } catch (final Exception exception) {
