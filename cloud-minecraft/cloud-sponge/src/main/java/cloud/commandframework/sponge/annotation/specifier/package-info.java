@@ -21,33 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package cloud.commandframework.fabric.internal;
-
-import net.minecraft.commands.arguments.selector.EntitySelector;
-import org.checkerframework.checker.nullness.qual.NonNull;
-
-public interface EntitySelectorAccess {
-
-    /**
-     * Get the last parsed input string
-     *
-     * @return input string
-     */
-    @NonNull String inputString();
-
-    /**
-     * Set the last parsed input string
-     *
-     * @param inputString input string
-     */
-    void inputString(@NonNull String inputString);
-
-    /**
-     * Set whether to bypass permission checks.
-     *
-     * @param shouldBypass whether to bypass checks
-     * @return this {@link EntitySelector}
-     */
-    @NonNull EntitySelector bypassPermissionCheck(boolean shouldBypass);
-
-}
+/**
+ * Specifier annotations for cloud-sponge.
+ */
+package cloud.commandframework.sponge.annotation.specifier;

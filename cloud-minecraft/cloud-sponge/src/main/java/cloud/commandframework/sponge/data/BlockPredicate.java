@@ -21,33 +21,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package cloud.commandframework.fabric.internal;
+package cloud.commandframework.sponge.data;
 
-import net.minecraft.commands.arguments.selector.EntitySelector;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.spongepowered.api.world.server.ServerLocation;
+import org.spongepowered.api.world.server.ServerWorld;
 
-public interface EntitySelectorAccess {
+import java.util.function.Predicate;
 
-    /**
-     * Get the last parsed input string
-     *
-     * @return input string
-     */
-    @NonNull String inputString();
-
-    /**
-     * Set the last parsed input string
-     *
-     * @param inputString input string
-     */
-    void inputString(@NonNull String inputString);
+/**
+ * A {@link Predicate} for blocks in a {@link ServerWorld}, parsed from user input.
+ *
+ * <p>By default, a parsed {@link BlockPredicate} will not load chunks to perform tests. It will simply
+ * return {@code false} when attempting to test a block in unloaded chunks.</p>
+ *
+ * <p>To get a {@link BlockPredicate} which will load chunks, use {@link #loadChunks()}.</p>
+ */
+public interface BlockPredicate extends Predicate<ServerLocation> {
 
     /**
-     * Set whether to bypass permission checks.
+     * Get a version of this {@link BlockPredicate} which will load chunks in order to perform
+     * tests.
      *
-     * @param shouldBypass whether to bypass checks
-     * @return this {@link EntitySelector}
+     * <p>If this {@link BlockPredicate} already loads chunks, it will simply return itself.</p>
+     *
+     * @return a {@link BlockPredicate} which loads chunks
      */
-    @NonNull EntitySelector bypassPermissionCheck(boolean shouldBypass);
+    @NonNull BlockPredicate loadChunks();
 
 }

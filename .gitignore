@@ -226,3 +226,6 @@ gradle-app.setting
 ### Fabric Loom run files ###
 
 /run/
+
+# macOS garbage
+.DS_Store

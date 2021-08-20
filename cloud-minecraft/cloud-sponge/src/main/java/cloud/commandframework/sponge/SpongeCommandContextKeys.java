@@ -21,33 +21,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package cloud.commandframework.fabric.internal;
+package cloud.commandframework.sponge;
 
-import net.minecraft.commands.arguments.selector.EntitySelector;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import cloud.commandframework.keys.CloudKey;
+import cloud.commandframework.keys.SimpleCloudKey;
+import io.leangen.geantyref.TypeToken;
+import org.spongepowered.api.command.CommandCause;
 
-public interface EntitySelectorAccess {
-
-    /**
-     * Get the last parsed input string
-     *
-     * @return input string
-     */
-    @NonNull String inputString();
+/**
+ * Sponge related {@link cloud.commandframework.context.CommandContext} keys.
+ */
+public final class SpongeCommandContextKeys {
 
     /**
-     * Set the last parsed input string
-     *
-     * @param inputString input string
+     * The Sponge native {@link org.spongepowered.api.command.CommandCause} instance is stored in the {@link cloud.commandframework.context.CommandContext}
+     * by {@link SpongeCommandPreprocessor}
      */
-    void inputString(@NonNull String inputString);
+    public static final CloudKey<CommandCause> COMMAND_CAUSE = SimpleCloudKey.of(
+            "cloud:sponge_command_cause",
+            TypeToken.get(CommandCause.class)
+    );
 
-    /**
-     * Set whether to bypass permission checks.
-     *
-     * @param shouldBypass whether to bypass checks
-     * @return this {@link EntitySelector}
-     */
-    @NonNull EntitySelector bypassPermissionCheck(boolean shouldBypass);
+    private SpongeCommandContextKeys() {
+    }
 
 }

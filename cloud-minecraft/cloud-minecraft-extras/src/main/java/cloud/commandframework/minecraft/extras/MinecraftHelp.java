@@ -74,7 +74,7 @@ public final class MinecraftHelp<C> {
             NamedTextColor.GRAY,
             NamedTextColor.DARK_GRAY
     );
-
+//todo show permission
     public static final String MESSAGE_HELP_TITLE = "help";
     public static final String MESSAGE_COMMAND = "command";
     public static final String MESSAGE_DESCRIPTION = "description";

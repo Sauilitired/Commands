@@ -21,33 +21,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package cloud.commandframework.fabric.internal;
+package cloud.commandframework.sponge;
 
-import net.minecraft.commands.arguments.selector.EntitySelector;
+import cloud.commandframework.arguments.parser.ParserParameter;
+import io.leangen.geantyref.TypeToken;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-public interface EntitySelectorAccess {
+/**
+ * {@link ParserParameter} keys for cloud-sponge.
+ */
+public final class SpongeParserParameters {
+
+    private SpongeParserParameters() {
+    }
 
     /**
-     * Get the last parsed input string
-     *
-     * @return input string
+     * Indicates that positions should be centered on the middle of blocks, i.e. x.5.
      */
-    @NonNull String inputString();
+    public static final ParserParameter<Boolean> CENTER_INTEGERS = create("center_integers", TypeToken.get(Boolean.class));
 
-    /**
-     * Set the last parsed input string
-     *
-     * @param inputString input string
-     */
-    void inputString(@NonNull String inputString);
-
-    /**
-     * Set whether to bypass permission checks.
-     *
-     * @param shouldBypass whether to bypass checks
-     * @return this {@link EntitySelector}
-     */
-    @NonNull EntitySelector bypassPermissionCheck(boolean shouldBypass);
+    private static <T> @NonNull ParserParameter<T> create(
+            final @NonNull String key,
+            final @NonNull TypeToken<T> expectedType
+    ) {
+        return new ParserParameter<>(key, expectedType);
+    }
 
 }

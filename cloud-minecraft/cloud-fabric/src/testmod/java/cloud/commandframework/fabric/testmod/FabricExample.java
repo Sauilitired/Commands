@@ -126,12 +126,12 @@ public final class FabricExample implements ModInitializer {
                 }));
 
         manager.command(base.literal("give")
-                .permission("cloud.give")
+                //.permission("cloud.give")
                 .argument(MultiplePlayerSelectorArgument.of("targets"))
                 .argument(ItemInputArgument.of("item"))
                 .argument(IntegerArgument.<CommandSourceStack>newBuilder("amount")
                         .withMin(1)
-                        .asOptionalWithDefault("1"))
+                        .asOptionalWithDefault(1))
                 .handler(ctx -> {
                     final ItemInput item = ctx.get("item");
                     final MultiplePlayerSelector targets = ctx.get("targets");

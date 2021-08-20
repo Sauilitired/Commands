@@ -21,33 +21,63 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package cloud.commandframework.fabric.internal;
+package cloud.commandframework.sponge.data;
 
-import net.minecraft.commands.arguments.selector.EntitySelector;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.spongepowered.api.command.selector.Selector;
 
-public interface EntitySelectorAccess {
+import java.util.Collection;
+import java.util.Collections;
+
+/**
+ * Cloud wrapper for parsed {@link org.spongepowered.api.command.selector.Selector Selectors} and their results.
+ *
+ * @param <R> result type
+ */
+public interface SelectorWrapper<R> {
 
     /**
-     * Get the last parsed input string
+     * Get the raw string associated with the selector.
      *
-     * @return input string
+     * @return the input
      */
     @NonNull String inputString();
 
     /**
-     * Set the last parsed input string
+     * Get the wrapped {@link Selector}.
      *
-     * @param inputString input string
+     * @return the selector
      */
-    void inputString(@NonNull String inputString);
+    @NonNull Selector selector();
 
     /**
-     * Set whether to bypass permission checks.
+     * Resolve the value of this selector.
      *
-     * @param shouldBypass whether to bypass checks
-     * @return this {@link EntitySelector}
+     * <p>A successfully parsed selector must match one or more values</p>
+     *
+     * @return all matched entities
      */
-    @NonNull EntitySelector bypassPermissionCheck(boolean shouldBypass);
+    @NonNull Collection<R> get();
+
+    /**
+     * A specialized selector that can only return one value.
+     *
+     * @param <R> the value type
+     */
+    interface Single<R> extends SelectorWrapper<R> {
+
+        @Override
+        default @NonNull Collection<R> get() {
+            return Collections.singletonList(this.getSingle());
+        }
+
+        /**
+         * Get the single value from this selector.
+         *
+         * @return the value
+         */
+        @NonNull R getSingle();
+
+    }
 
 }

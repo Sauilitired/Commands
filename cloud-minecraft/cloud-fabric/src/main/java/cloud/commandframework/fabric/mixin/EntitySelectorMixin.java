@@ -24,18 +24,23 @@
 package cloud.commandframework.fabric.mixin;
 
 import cloud.commandframework.fabric.internal.EntitySelectorAccess;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.selector.EntitySelector;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(EntitySelector.class)
 @Implements({@Interface(iface = EntitySelectorAccess.class, prefix = "cloud$", unique = true)})
+@Unique
 abstract class EntitySelectorMixin {
 
-    @Unique
+    // todo: permission instead of bypass? like sponge?
+    private boolean bypassPermissionCheck = false;
     private String inputString;
 
     public @NonNull String cloud$inputString() {
@@ -44,6 +49,19 @@ abstract class EntitySelectorMixin {
 
     public void cloud$inputString(final @NonNull String inputString) {
         this.inputString = inputString;
+    }
+
+    public @NonNull EntitySelector cloud$bypassPermissionCheck(final boolean shouldBypass) {
+        this.bypassPermissionCheck = shouldBypass;
+        return (EntitySelector) (Object) this;
+    }
+
+    @Redirect(
+            method = "checkPermissions",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/commands/CommandSourceStack;hasPermission(I)Z")
+    )
+    private boolean redirectHasPermission(final @NonNull CommandSourceStack commandSourceStack, final int level) {
+        return this.bypassPermissionCheck || commandSourceStack.hasPermission(level);
     }
 
 }

@@ -21,33 +21,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package cloud.commandframework.fabric.internal;
+package cloud.commandframework.sponge.data;
 
-import net.minecraft.commands.arguments.selector.EntitySelector;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import org.spongepowered.api.item.inventory.ItemStack;
 
-public interface EntitySelectorAccess {
+import java.util.function.Predicate;
 
-    /**
-     * Get the last parsed input string
-     *
-     * @return input string
-     */
-    @NonNull String inputString();
-
-    /**
-     * Set the last parsed input string
-     *
-     * @param inputString input string
-     */
-    void inputString(@NonNull String inputString);
-
-    /**
-     * Set whether to bypass permission checks.
-     *
-     * @param shouldBypass whether to bypass checks
-     * @return this {@link EntitySelector}
-     */
-    @NonNull EntitySelector bypassPermissionCheck(boolean shouldBypass);
+/**
+ * A {@link Predicate} for {@link ItemStack ItemStacks}, parsed from user input.
+ */
+public interface ItemStackPredicate extends Predicate<ItemStack> {
 
 }

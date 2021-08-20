@@ -224,7 +224,7 @@ public final class CloudBrigadierManager<C, S> {
         }, builder -> builder.cloudSuggestions().toConstant(StringArgumentType.greedyString()));
         /* Map wrapped parsers to their native types */
         this.registerMapping(new TypeToken<WrappedBrigadierParser<C, ?>>() {
-        }, builder -> builder.to(WrappedBrigadierParser::getNativeArgument));
+        }, builder -> builder.to(WrappedBrigadierParser::getNativeArgument)); // todo : way to  specify custom suggestions
     }
 
     /**
@@ -392,7 +392,7 @@ public final class CloudBrigadierManager<C, S> {
         }
         return Pair.of(
                 (ArgumentType<?>) ((Function) mapping.getMapper()).apply(commandArgument),
-                mapping.makeSuggestionProvider(argumentParser)
+                mapping.makeSuggestionProvider(argumentParser) // todo: should we use unwrapped here?
         );
     }
 
@@ -569,6 +569,8 @@ public final class CloudBrigadierManager<C, S> {
                     root.getValue().getParser()
             );
             final SuggestionProvider<S> provider = pair.getSecond() == delegateSuggestions()
+                    // todo: nodesupplyingparser equivalent
+                    //|| !(root.getValue().getSuggestionsProvider() instanceof DelegatingSuggestionsProvider) // todo
                     ? (context, builder) -> this.buildSuggestions(
                             context,
                             root.getParent(),

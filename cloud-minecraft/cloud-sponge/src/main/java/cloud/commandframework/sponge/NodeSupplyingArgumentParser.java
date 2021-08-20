@@ -21,33 +21,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package cloud.commandframework.fabric.internal;
+package cloud.commandframework.sponge;
 
-import net.minecraft.commands.arguments.selector.EntitySelector;
+import cloud.commandframework.arguments.parser.ArgumentParser;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.spongepowered.api.command.registrar.tree.CommandTreeNode;
 
-public interface EntitySelectorAccess {
-
-    /**
-     * Get the last parsed input string
-     *
-     * @return input string
-     */
-    @NonNull String inputString();
-
-    /**
-     * Set the last parsed input string
-     *
-     * @param inputString input string
-     */
-    void inputString(@NonNull String inputString);
+/**
+ * An {@link ArgumentParser} which also supplies a special {@link CommandTreeNode.Argument}.
+ *
+ * @param <C> sender type
+ * @param <T> value type
+ */
+public interface NodeSupplyingArgumentParser<C, T> extends ArgumentParser<C, T> {
 
     /**
-     * Set whether to bypass permission checks.
+     * Get the node for this parser.
      *
-     * @param shouldBypass whether to bypass checks
-     * @return this {@link EntitySelector}
+     * @return argument node
      */
-    @NonNull EntitySelector bypassPermissionCheck(boolean shouldBypass);
+    CommandTreeNode.@NonNull Argument<? extends CommandTreeNode.Argument<?>> node();
 
 }

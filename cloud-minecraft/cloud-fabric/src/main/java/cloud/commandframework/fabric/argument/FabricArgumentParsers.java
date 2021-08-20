@@ -159,7 +159,8 @@ public final class FabricArgumentParsers {
                                 () -> ArgumentParseResult.success(new SinglePlayerSelectorImpl(
                                         ((EntitySelectorAccess) entitySelector).inputString(),
                                         entitySelector,
-                                        entitySelector.findSinglePlayer(serverCommandSource)
+                                        ((EntitySelectorAccess) entitySelector)
+                                                .bypassPermissionCheck(true).findSinglePlayer(serverCommandSource)
                                 ))
                         )
                 ));
@@ -180,7 +181,8 @@ public final class FabricArgumentParsers {
                                 () -> ArgumentParseResult.success(new MultiplePlayerSelectorImpl(
                                         ((EntitySelectorAccess) entitySelector).inputString(),
                                         entitySelector,
-                                        entitySelector.findPlayers(serverCommandSource)
+                                        ((EntitySelectorAccess) entitySelector)
+                                                .bypassPermissionCheck(true).findPlayers(serverCommandSource)
                                 ))
                         )
                 ));
@@ -201,7 +203,8 @@ public final class FabricArgumentParsers {
                                 () -> ArgumentParseResult.success(new SingleEntitySelectorImpl(
                                         ((EntitySelectorAccess) entitySelector).inputString(),
                                         entitySelector,
-                                        entitySelector.findSingleEntity(serverCommandSource)
+                                        ((EntitySelectorAccess) entitySelector)
+                                                .bypassPermissionCheck(true).findSingleEntity(serverCommandSource)
                                 ))
                         )
                 ));
@@ -222,7 +225,8 @@ public final class FabricArgumentParsers {
                                 () -> ArgumentParseResult.success(new MultipleEntitySelectorImpl(
                                         ((EntitySelectorAccess) entitySelector).inputString(),
                                         entitySelector,
-                                        Collections.unmodifiableCollection(entitySelector.findEntities(serverCommandSource))
+                                        Collections.unmodifiableCollection(((EntitySelectorAccess) entitySelector)
+                                                .bypassPermissionCheck(true).findEntities(serverCommandSource))
                                 ))
                         )
                 ));

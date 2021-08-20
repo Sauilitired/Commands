@@ -21,33 +21,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-package cloud.commandframework.fabric.internal;
+package cloud.commandframework.sponge.data;
 
-import net.minecraft.commands.arguments.selector.EntitySelector;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.spongepowered.api.profile.GameProfile;
 
-public interface EntitySelectorAccess {
+import java.util.Collection;
 
-    /**
-     * Get the last parsed input string
-     *
-     * @return input string
-     */
-    @NonNull String inputString();
-
-    /**
-     * Set the last parsed input string
-     *
-     * @param inputString input string
-     */
-    void inputString(@NonNull String inputString);
+/**
+ * Cloud wrapper for a {@link Collection} of {@link GameProfile GameProfiles}.
+ */
+public interface GameProfileCollection {
 
     /**
-     * Set whether to bypass permission checks.
+     * Get the wrapped {@link Collection} of {@link GameProfile GameProfiles}.
      *
-     * @param shouldBypass whether to bypass checks
-     * @return this {@link EntitySelector}
+     * <p>A successfully parsed result will always contain at least {@code 1} element.</p>
+     *
+     * @return a {@link Collection} of {@link GameProfile GameProfiles}
      */
-    @NonNull EntitySelector bypassPermissionCheck(boolean shouldBypass);
+    @NonNull Collection<@NonNull GameProfile> gameProfiles();
 
 }
