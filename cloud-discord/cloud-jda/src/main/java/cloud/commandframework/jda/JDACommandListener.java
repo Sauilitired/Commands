@@ -69,7 +69,7 @@ public class JDACommandListener<C> extends ListenerAdapter {
         }
 
         final String prefix = this.commandManager.getPrefixMapper().apply(sender);
-        String content = message.getContentRaw();
+        String content = message.getContentDisplay();
 
         if (!content.startsWith(prefix)) {
             return;
