@@ -1,4 +1,5 @@
 dependencies {
     api(project(":cloud-core"))
-    compileOnly ("net.dv8tion", "JDA", Versions.jda)
+    compileOnly(project(":cloud-annotations"))
+    compileOnly("net.dv8tion", "JDA", Versions.jda)
 }

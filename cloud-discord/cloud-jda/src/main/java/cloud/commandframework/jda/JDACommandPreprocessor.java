@@ -54,11 +54,11 @@ final class JDACommandPreprocessor<C> implements CommandPreprocessor<C> {
      * Stores the {@link net.dv8tion.jda.api.JDA} in the context with the key "JDA",
      * the {@link net.dv8tion.jda.api.events.message.MessageReceivedEvent} with the key "MessageReceivedEvent", and
      * the {@link net.dv8tion.jda.api.entities.MessageChannel} with the key "MessageChannel".
-     *
+     * <p>
      * If the message was sent in a guild, the {@link net.dv8tion.jda.api.entities.Guild} will be stored in the context with the
      * key "Guild". If the message was also sent in a text channel, the {@link net.dv8tion.jda.api.entities.TextChannel} will be
      * stored in the context with the key "TextChannel".
-     *
+     * <p>
      * If the message was sent in a DM instead of in a guild, the {@link net.dv8tion.jda.api.entities.PrivateChannel} will be
      * stored in the context with the key "PrivateChannel".
      */
@@ -76,6 +76,7 @@ final class JDACommandPreprocessor<C> implements CommandPreprocessor<C> {
 
         context.getCommandContext().store("MessageReceivedEvent", event);
         context.getCommandContext().store("MessageChannel", event.getChannel());
+        context.getCommandContext().store("Message", event.getMessage());
 
         if (event.isFromGuild()) {
             Guild guild = event.getGuild();

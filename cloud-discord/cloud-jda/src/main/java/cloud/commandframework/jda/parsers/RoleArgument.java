@@ -31,6 +31,8 @@ import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.exceptions.parsing.NoInputProvidedException;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
@@ -39,6 +41,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.CompletionException;
 import java.util.function.BiFunction;
 
 /**
@@ -123,17 +126,6 @@ public final class RoleArgument<C> extends CommandArgument<C, Role> {
         }
 
         /**
-         * Set the modes for the parsers to use
-         *
-         * @param modes List of Modes
-         * @return Builder instance
-         */
-        public @NonNull Builder<C> withParsers(final @NonNull Set<ParserMode> modes) {
-            this.modes = modes;
-            return this;
-        }
-
-        /**
          * Builder a new example component
          *
          * @return Constructed component
@@ -148,6 +140,17 @@ public final class RoleArgument<C> extends CommandArgument<C, Role> {
                     this.getDefaultDescription(),
                     this.modes
             );
+        }
+
+        /**
+         * Set the modes for the parsers to use
+         *
+         * @param modes List of Modes
+         * @return Builder instance
+         */
+        public @NonNull Builder<C> withParsers(final @NonNull Set<ParserMode> modes) {
+            this.modes = modes;
+            return this;
         }
 
     }
@@ -205,7 +208,7 @@ public final class RoleArgument<C> extends CommandArgument<C, Role> {
                         final ArgumentParseResult<Role> role = this.roleFromId(event, input, id);
                         inputQueue.remove();
                         return role;
-                    } catch (final RoleNotFoundException | NumberFormatException e) {
+                    } catch (final RoleNotFoundParseException | NumberFormatException e) {
                         exception = e;
                     }
                 } else {
@@ -220,7 +223,7 @@ public final class RoleArgument<C> extends CommandArgument<C, Role> {
                     final ArgumentParseResult<Role> result = this.roleFromId(event, input, input);
                     inputQueue.remove();
                     return result;
-                } catch (final RoleNotFoundException | NumberFormatException e) {
+                } catch (final RoleNotFoundParseException | NumberFormatException e) {
                     exception = e;
                 }
             }
@@ -228,8 +231,8 @@ public final class RoleArgument<C> extends CommandArgument<C, Role> {
             if (this.modes.contains(ParserMode.NAME)) {
                 final List<Role> roles = event.getGuild().getRolesByName(input, true);
 
-                if (roles.size() == 0) {
-                    exception = new RoleNotFoundException(input);
+                if (roles.isEmpty()) {
+                    exception = new RoleNotFoundParseException(input);
                 } else if (roles.size() > 1) {
                     exception = new TooManyRolesFoundParseException(input);
                 } else {
@@ -242,24 +245,32 @@ public final class RoleArgument<C> extends CommandArgument<C, Role> {
             return ArgumentParseResult.failure(exception);
         }
 
-        @Override
-        public boolean isContextFree() {
-            return true;
-        }
-
         private @NonNull ArgumentParseResult<Role> roleFromId(
                 final @NonNull MessageReceivedEvent event,
                 final @NonNull String input,
                 final @NonNull String id
-        )
-                throws RoleNotFoundException, NumberFormatException {
-            final Role role = event.getGuild().getRoleById(id);
+        ) throws RoleNotFoundParseException, NumberFormatException {
+            try {
+                final Role role = event.getGuild().getRoleById(id);
 
-            if (role == null) {
-                throw new RoleNotFoundException(input);
+                if (role == null) {
+                    throw new RoleNotFoundParseException(input);
+                }
+
+                return ArgumentParseResult.success(role);
+            } catch (final CompletionException e) {
+                if (e.getCause().getClass().equals(ErrorResponseException.class)
+                        && ((ErrorResponseException) e.getCause()).getErrorResponse() == ErrorResponse.UNKNOWN_ROLE) {
+                    //noinspection ThrowInsideCatchBlockWhichIgnoresCaughtException
+                    throw new RoleNotFoundParseException(input);
+                }
+                throw e;
             }
+        }
 
-            return ArgumentParseResult.success(role);
+        @Override
+        public boolean isContextFree() {
+            return true;
         }
 
     }
@@ -312,7 +323,7 @@ public final class RoleArgument<C> extends CommandArgument<C, Role> {
     }
 
 
-    public static final class RoleNotFoundException extends RoleParseException {
+    public static final class RoleNotFoundParseException extends RoleParseException {
 
         private static final long serialVersionUID = 7931804739792920510L;
 
@@ -321,7 +332,7 @@ public final class RoleArgument<C> extends CommandArgument<C, Role> {
          *
          * @param input String input
          */
-        public RoleNotFoundException(final @NonNull String input) {
+        public RoleNotFoundParseException(final @NonNull String input) {
             super(input);
         }
 

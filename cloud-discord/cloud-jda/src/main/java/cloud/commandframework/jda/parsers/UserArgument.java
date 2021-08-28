@@ -29,18 +29,22 @@ import cloud.commandframework.arguments.parser.ArgumentParseResult;
 import cloud.commandframework.arguments.parser.ArgumentParser;
 import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.exceptions.parsing.NoInputProvidedException;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.CompletionException;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -136,44 +140,11 @@ public final class UserArgument<C> extends CommandArgument<C, User> {
 
     public static final class Builder<C> extends CommandArgument.Builder<C, User> {
 
-        private Set<ParserMode> modes = new HashSet<>();
+        private Set<ParserMode> modes = EnumSet.noneOf(ParserMode.class);
         private Isolation isolationLevel = Isolation.GLOBAL;
 
         private Builder(final @NonNull String name) {
             super(User.class, name);
-        }
-
-        /**
-         * Set the modes for the parsers to use
-         *
-         * @param modes List of Modes
-         * @return Builder instance
-         */
-        public @NonNull Builder<C> withParsers(final @NonNull Set<ParserMode> modes) {
-            this.modes = modes;
-            return this;
-        }
-
-        /**
-         * Add a parser mode to use
-         *
-         * @param mode Parser mode to add
-         * @return Builder instance
-         */
-        public @NonNull Builder<C> withParserMode(final @NonNull ParserMode mode) {
-            this.modes.add(mode);
-            return this;
-        }
-
-        /**
-         * Set the isolation level of the parser
-         *
-         * @param isolation Isolation level
-         * @return Builder instance
-         */
-        public @NonNull Builder<C> withIsolationLevel(final @NonNull Isolation isolation) {
-            this.isolationLevel = isolation;
-            return this;
         }
 
         /**
@@ -192,6 +163,39 @@ public final class UserArgument<C> extends CommandArgument<C, User> {
                     this.modes,
                     this.isolationLevel
             );
+        }
+
+        /**
+         * Set the isolation level of the parser
+         *
+         * @param isolation Isolation level
+         * @return Builder instance
+         */
+        public @NonNull Builder<C> withIsolationLevel(final @NonNull Isolation isolation) {
+            this.isolationLevel = isolation;
+            return this;
+        }
+
+        /**
+         * Add a parser mode to use
+         *
+         * @param mode Parser mode to add
+         * @return Builder instance
+         */
+        public @NonNull Builder<C> withParserMode(final @NonNull ParserMode mode) {
+            this.modes.add(mode);
+            return this;
+        }
+
+        /**
+         * Set the modes for the parsers to use
+         *
+         * @param modes List of Modes
+         * @return Builder instance
+         */
+        public @NonNull Builder<C> withParsers(final @NonNull Set<ParserMode> modes) {
+            this.modes = modes;
+            return this;
         }
 
     }
@@ -262,7 +266,7 @@ public final class UserArgument<C> extends CommandArgument<C, User> {
                     }
 
                     try {
-                        final ArgumentParseResult<User> result = this.userFromId(event, input, id);
+                        final ArgumentParseResult<User> result = this.userFromId(event, input, Long.parseLong(id));
                         inputQueue.remove();
                         return result;
                     } catch (final UserNotFoundParseException | NumberFormatException e) {
@@ -277,7 +281,7 @@ public final class UserArgument<C> extends CommandArgument<C, User> {
 
             if (this.modes.contains(ParserMode.ID)) {
                 try {
-                    final ArgumentParseResult<User> result = this.userFromId(event, input, input);
+                    final ArgumentParseResult<User> result = this.userFromId(event, input, Long.parseLong(input));
                     inputQueue.remove();
                     return result;
                 } catch (final UserNotFoundParseException | NumberFormatException e) {
@@ -291,8 +295,10 @@ public final class UserArgument<C> extends CommandArgument<C, User> {
                 if (this.isolationLevel == Isolation.GLOBAL) {
                     users = event.getJDA().getUsersByName(input, true);
                 } else if (event.isFromGuild()) {
-                    users = event.getGuild().getMembersByEffectiveName(input, true)
-                            .stream().map(Member::getUser)
+                    users = event.getGuild().getMembers()
+                            .stream()
+                            .filter(member -> member.getEffectiveName().toLowerCase().startsWith(input))
+                            .map(Member::getUser)
                             .collect(Collectors.toList());
                 } else if (event.getAuthor().getName().equalsIgnoreCase(input)) {
                     users = Collections.singletonList(event.getAuthor());
@@ -300,7 +306,7 @@ public final class UserArgument<C> extends CommandArgument<C, User> {
                     users = Collections.emptyList();
                 }
 
-                if (users.size() == 0) {
+                if (users.isEmpty()) {
                     exception = new UserNotFoundParseException(input);
                 } else if (users.size() > 1) {
                     exception = new TooManyUsersFoundParseException(input);
@@ -314,25 +320,39 @@ public final class UserArgument<C> extends CommandArgument<C, User> {
             return ArgumentParseResult.failure(exception);
         }
 
-        @Override
-        public boolean isContextFree() {
-            return true;
-        }
-
         private @NonNull ArgumentParseResult<User> userFromId(
                 final @NonNull MessageReceivedEvent event,
                 final @NonNull String input,
-                final @NonNull String id
-        )
-                throws UserNotFoundParseException, NumberFormatException {
+                final @NonNull Long id
+        ) throws UserNotFoundParseException, NumberFormatException {
             final User user;
             if (this.isolationLevel == Isolation.GLOBAL) {
-                user = event.getJDA().getUserById(id);
-            } else if (event.isFromGuild()) {
-                Member member = event.getGuild().getMemberById(id);
+                User globalUser = event.getJDA().getUserById(id);
 
-                user = member != null ? member.getUser() : null;
-            } else if (event.getAuthor().getId().equalsIgnoreCase(id)) {
+                if (globalUser == null) { // fallback if user is not cached
+                    globalUser = event.getJDA().retrieveUserById(id).complete();
+                }
+
+                user = globalUser;
+            } else if (event.isFromGuild()) {
+                try {
+                    final Guild guild = event.getGuild();
+                    Member member = guild.getMemberById(id);
+
+                    if (member == null) { // fallback if user is not cached
+                        member = guild.retrieveMemberById(id).complete();
+                    }
+
+                    user = member.getUser();
+                } catch (final CompletionException e) {
+                    if (e.getCause().getClass().equals(ErrorResponseException.class)
+                            && ((ErrorResponseException) e.getCause()).getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
+                        //noinspection ThrowInsideCatchBlockWhichIgnoresCaughtException
+                        throw new UserNotFoundParseException(input);
+                    }
+                    throw e;
+                }
+            } else if (event.getAuthor().getIdLong() == id) {
                 user = event.getAuthor();
             } else {
                 user = null;
@@ -343,6 +363,11 @@ public final class UserArgument<C> extends CommandArgument<C, User> {
             } else {
                 return ArgumentParseResult.success(user);
             }
+        }
+
+        @Override
+        public boolean isContextFree() {
+            return true;
         }
 
     }
@@ -410,7 +435,10 @@ public final class UserArgument<C> extends CommandArgument<C, User> {
 
         @Override
         public @NonNull String getMessage() {
-            return String.format("User not found for '%s'.", getInput());
+            return String.format(
+                    "User not found for '%s'. Note: if a user is not cached, they cannot be loaded by name.",
+                    getInput()
+            );
         }
 
     }

@@ -29,8 +29,8 @@ import cloud.commandframework.arguments.parser.ArgumentParseResult;
 import cloud.commandframework.arguments.parser.ArgumentParser;
 import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.exceptions.parsing.NoInputProvidedException;
-import net.dv8tion.jda.api.entities.MessageChannel;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.requests.ErrorResponse;
@@ -38,24 +38,27 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.CompletionException;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 /**
- * Command Argument for {@link MessageChannel}
+ * Command Argument for {@link Member}
  *
  * @param <C> Command sender type
+ * @since 1.1.0
  */
 @SuppressWarnings("unused")
-public final class ChannelArgument<C> extends CommandArgument<C, MessageChannel> {
+public final class MemberArgument<C> extends CommandArgument<C, Member> {
 
     private final Set<ParserMode> modes;
 
-    private ChannelArgument(
+    private MemberArgument(
             final boolean required,
             final @NonNull String name,
             final @NonNull String defaultValue,
@@ -67,9 +70,9 @@ public final class ChannelArgument<C> extends CommandArgument<C, MessageChannel>
         super(
                 required,
                 name,
-                new MessageParser<>(modes),
+                new MemberParser<>(modes),
                 defaultValue,
-                MessageChannel.class,
+                Member.class,
                 suggestionsProvider,
                 defaultDescription
         );
@@ -94,8 +97,8 @@ public final class ChannelArgument<C> extends CommandArgument<C, MessageChannel>
      * @param <C>  Command sender type
      * @return Created component
      */
-    public static <C> @NonNull CommandArgument<C, MessageChannel> of(final @NonNull String name) {
-        return ChannelArgument.<C>newBuilder(name).asRequired().build();
+    public static <C> @NonNull CommandArgument<C, Member> of(final @NonNull String name) {
+        return MemberArgument.<C>newBuilder(name).withParserMode(ParserMode.MENTION).asRequired().build();
     }
 
     /**
@@ -105,8 +108,8 @@ public final class ChannelArgument<C> extends CommandArgument<C, MessageChannel>
      * @param <C>  Command sender type
      * @return Created component
      */
-    public static <C> @NonNull CommandArgument<C, MessageChannel> optional(final @NonNull String name) {
-        return ChannelArgument.<C>newBuilder(name).asOptional().build();
+    public static <C> @NonNull CommandArgument<C, Member> optional(final @NonNull String name) {
+        return MemberArgument.<C>newBuilder(name).withParserMode(ParserMode.MENTION).asOptional().build();
     }
 
     /**
@@ -126,12 +129,12 @@ public final class ChannelArgument<C> extends CommandArgument<C, MessageChannel>
     }
 
 
-    public static final class Builder<C> extends CommandArgument.Builder<C, MessageChannel> {
+    public static final class Builder<C> extends CommandArgument.Builder<C, Member> {
 
-        private Set<ParserMode> modes = new HashSet<>();
+        private Set<ParserMode> modes = EnumSet.noneOf(ParserMode.class);
 
         private Builder(final @NonNull String name) {
-            super(MessageChannel.class, name);
+            super(Member.class, name);
         }
 
         /**
@@ -140,8 +143,8 @@ public final class ChannelArgument<C> extends CommandArgument<C, MessageChannel>
          * @return Constructed component
          */
         @Override
-        public @NonNull ChannelArgument<C> build() {
-            return new ChannelArgument<>(
+        public @NonNull MemberArgument<C> build() {
+            return new MemberArgument<>(
                     this.isRequired(),
                     this.getName(),
                     this.getDefaultValue(),
@@ -149,6 +152,17 @@ public final class ChannelArgument<C> extends CommandArgument<C, MessageChannel>
                     this.getDefaultDescription(),
                     this.modes
             );
+        }
+
+        /**
+         * Add a parser mode to use
+         *
+         * @param mode Parser mode to add
+         * @return Builder instance
+         */
+        public @NonNull Builder<C> withParserMode(final @NonNull ParserMode mode) {
+            this.modes.add(mode);
+            return this;
         }
 
         /**
@@ -165,33 +179,32 @@ public final class ChannelArgument<C> extends CommandArgument<C, MessageChannel>
     }
 
 
-    public static final class MessageParser<C> implements ArgumentParser<C, MessageChannel> {
+    public static final class MemberParser<C> implements ArgumentParser<C, Member> {
 
         private final Set<ParserMode> modes;
 
         /**
-         * Construct a new argument parser for {@link MessageChannel}
+         * Construct a new argument parser for {@link Member}
          *
          * @param modes List of parsing modes to use when parsing
-         * @throws java.lang.IllegalStateException If no parsing modes were provided
+         * @throws java.lang.IllegalArgumentException If no parsing modes were provided
          */
-        public MessageParser(final @NonNull Set<ParserMode> modes) {
+        public MemberParser(final @NonNull Set<ParserMode> modes) {
             if (modes.isEmpty()) {
                 throw new IllegalArgumentException("At least one parsing mode is required");
             }
-
             this.modes = modes;
         }
 
         @Override
-        public @NonNull ArgumentParseResult<MessageChannel> parse(
+        public @NonNull ArgumentParseResult<Member> parse(
                 final @NonNull CommandContext<C> commandContext,
                 final @NonNull Queue<@NonNull String> inputQueue
         ) {
             final String input = inputQueue.peek();
             if (input == null) {
                 return ArgumentParseResult.failure(new NoInputProvidedException(
-                        MessageParser.class,
+                        MemberParser.class,
                         commandContext
                 ));
             }
@@ -203,50 +216,65 @@ public final class ChannelArgument<C> extends CommandArgument<C, MessageChannel>
             }
 
             final MessageReceivedEvent event = commandContext.get("MessageReceivedEvent");
-            Exception exception = null;
 
             if (!event.isFromGuild()) {
-                return ArgumentParseResult.failure(new IllegalArgumentException("Channel arguments can only be parsed in guilds"));
+                return ArgumentParseResult.failure(new CommandNotFromGuildException());
             }
 
+            Exception exception = null;
+
             if (this.modes.contains(ParserMode.MENTION)) {
-                if (input.startsWith("<#") && input.endsWith(">")) {
-                    final String id = input.substring(2, input.length() - 1);
+                if (input.startsWith("<@") && input.endsWith(">")) {
+                    final String id;
+                    if (input.startsWith("<@!")) {
+                        id = input.substring(3, input.length() - 1);
+                    } else {
+                        id = input.substring(2, input.length() - 1);
+                    }
 
                     try {
-                        final ArgumentParseResult<MessageChannel> channel = this.channelFromId(event, input, id);
+                        final ArgumentParseResult<Member> result = this.memberFromId(event, input, Long.parseLong(id));
                         inputQueue.remove();
-                        return channel;
-                    } catch (final ChannelNotFoundParseException | NumberFormatException e) {
+                        return result;
+                    } catch (final MemberNotFoundParseException | NumberFormatException e) {
                         exception = e;
                     }
                 } else {
                     exception = new IllegalArgumentException(
-                            String.format("Input '%s' is not a channel mention.", input)
+                            String.format("Input '%s' is not a member mention.", input)
                     );
                 }
             }
 
             if (this.modes.contains(ParserMode.ID)) {
                 try {
-                    final ArgumentParseResult<MessageChannel> result = this.channelFromId(event, input, input);
+                    final ArgumentParseResult<Member> result = this.memberFromId(event, input, Long.parseLong(input));
                     inputQueue.remove();
                     return result;
-                } catch (final ChannelNotFoundParseException | NumberFormatException e) {
+                } catch (final MemberNotFoundParseException | NumberFormatException e) {
                     exception = e;
                 }
             }
 
             if (this.modes.contains(ParserMode.NAME)) {
-                final List<TextChannel> channels = event.getGuild().getTextChannelsByName(input, true);
+                final List<Member> members;
 
-                if (channels.isEmpty()) {
-                    exception = new ChannelNotFoundParseException(input);
-                } else if (channels.size() > 1) {
-                    exception = new TooManyChannelsFoundParseException(input);
+                if (event.getAuthor().getName().equalsIgnoreCase(input)) {
+                    members = Collections.singletonList(event.getMember());
+                } else {
+                    members = event.getGuild().getMembers()
+                            .stream()
+                            .filter(member -> member.getEffectiveName().toLowerCase().startsWith(input))
+                            .collect(Collectors.toList());
+                }
+
+                if (members.isEmpty()) {
+                    exception = new MemberNotFoundParseException(input);
+                } else if (members.size() > 1) {
+                    exception = new TooManyMembersFoundParseException(input);
                 } else {
                     inputQueue.remove();
-                    return ArgumentParseResult.success(channels.get(0));
+                    return ArgumentParseResult.success(members.get(0));
                 }
             }
 
@@ -254,24 +282,36 @@ public final class ChannelArgument<C> extends CommandArgument<C, MessageChannel>
             return ArgumentParseResult.failure(exception);
         }
 
-        private @NonNull ArgumentParseResult<MessageChannel> channelFromId(
+        private @NonNull ArgumentParseResult<Member> memberFromId(
                 final @NonNull MessageReceivedEvent event,
                 final @NonNull String input,
-                final @NonNull String id
-        ) throws ChannelNotFoundParseException, NumberFormatException {
+                final @NonNull Long id
+        ) throws MemberNotFoundParseException, NumberFormatException {
             try {
-                final MessageChannel channel = event.getGuild().getTextChannelById(id);
+                final Guild guild = event.getGuild();
 
-                if (channel == null) {
-                    throw new ChannelNotFoundParseException(input);
+                final Member member;
+                if (event.getAuthor().getIdLong() == id) {
+                    member = event.getMember();
+                } else {
+                    Member guildMember = guild.getMemberById(id);
+
+                    if (guildMember == null) { // fallback if member is not cached
+                        guildMember = guild.retrieveMemberById(id).complete();
+                    }
+                    member = guildMember;
                 }
 
-                return ArgumentParseResult.success(channel);
+                if (member == null) {
+                    throw new MemberNotFoundParseException(input);
+                } else {
+                    return ArgumentParseResult.success(member);
+                }
             } catch (final CompletionException e) {
                 if (e.getCause().getClass().equals(ErrorResponseException.class)
-                        && ((ErrorResponseException) e.getCause()).getErrorResponse() == ErrorResponse.UNKNOWN_CHANNEL) {
+                        && ((ErrorResponseException) e.getCause()).getErrorResponse() == ErrorResponse.UNKNOWN_MEMBER) {
                     //noinspection ThrowInsideCatchBlockWhichIgnoresCaughtException
-                    throw new ChannelNotFoundParseException(input);
+                    throw new MemberNotFoundParseException(input);
                 }
                 throw e;
             }
@@ -285,24 +325,24 @@ public final class ChannelArgument<C> extends CommandArgument<C, MessageChannel>
     }
 
 
-    public static class ChannelParseException extends IllegalArgumentException {
+    public static class MemberParseException extends IllegalArgumentException {
 
-        private static final long serialVersionUID = 2724288304060572202L;
+        private static final long serialVersionUID = -6728909884195850077L;
         private final String input;
 
         /**
-         * Construct a new channel parse exception
+         * Construct a new user parse exception
          *
          * @param input String input
          */
-        public ChannelParseException(final @NonNull String input) {
+        public MemberParseException(final @NonNull String input) {
             this.input = input;
         }
 
         /**
          * Get the users input
          *
-         * @return users input
+         * @return Users input
          */
         public final @NonNull String getInput() {
             return this.input;
@@ -311,43 +351,56 @@ public final class ChannelArgument<C> extends CommandArgument<C, MessageChannel>
     }
 
 
-    public static final class TooManyChannelsFoundParseException extends ChannelParseException {
+    public static final class TooManyMembersFoundParseException extends MemberParseException {
 
-        private static final long serialVersionUID = -507783063742841507L;
+        private static final long serialVersionUID = 7222089412615886672L;
 
         /**
-         * Construct a new channel parse exception
+         * Construct a new user parse exception
          *
          * @param input String input
          */
-        public TooManyChannelsFoundParseException(final @NonNull String input) {
+        public TooManyMembersFoundParseException(final @NonNull String input) {
             super(input);
         }
 
         @Override
         public @NonNull String getMessage() {
-            return String.format("Too many channels found for '%s'.", getInput());
+            return String.format("Too many users found for '%s'.", getInput());
         }
 
     }
 
 
-    public static final class ChannelNotFoundParseException extends ChannelParseException {
+    public static final class MemberNotFoundParseException extends MemberParseException {
 
-        private static final long serialVersionUID = -8299458048947528494L;
+        private static final long serialVersionUID = 3689949065073643826L;
 
         /**
-         * Construct a new channel parse exception
+         * Construct a new user parse exception
          *
          * @param input String input
          */
-        public ChannelNotFoundParseException(final @NonNull String input) {
+        public MemberNotFoundParseException(final @NonNull String input) {
             super(input);
         }
 
         @Override
         public @NonNull String getMessage() {
-            return String.format("Channel not found for '%s'.", getInput());
+            return String.format("User not found for '%s'.", getInput());
+        }
+
+    }
+
+    public static final class CommandNotFromGuildException extends IllegalArgumentException {
+
+        private static final long serialVersionUID = -6023489381287831501L;
+
+        /**
+         * Constructs a new command not from guild exception.
+         */
+        public CommandNotFromGuildException() {
+            super("Command must be executed in a guild.");
         }
 
     }
