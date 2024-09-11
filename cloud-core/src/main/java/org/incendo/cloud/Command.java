@@ -472,6 +472,27 @@ public class Command<C> {
         }
 
         /**
+         * Adds command meta with no value to the internal command meta-map
+         *
+         * @param key   meta key
+         * @return new builder instance using the inserted meta key
+         */
+        @API(status = API.Status.STABLE)
+        public @NonNull Builder<C> meta(final @NonNull CloudKey<Void> key) {
+            final CommandMeta commandMeta = CommandMeta.builder().with(this.commandMeta).with(key).build();
+            return new Builder<>(
+                    this.commandManager,
+                    commandMeta,
+                    this.senderType,
+                    this.commandComponents,
+                    this.commandExecutionHandler,
+                    this.permission,
+                    this.flags,
+                    this.commandDescription
+            );
+        }
+
+        /**
          * Supplies a command manager instance to the builder.
          * <p>
          * This will be used when attempting to

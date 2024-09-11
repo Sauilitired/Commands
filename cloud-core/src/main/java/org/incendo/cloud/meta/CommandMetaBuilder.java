@@ -66,6 +66,19 @@ public class CommandMetaBuilder {
     }
 
     /**
+     * Stores the given {@code key} with no value.
+     *
+     * @param key   the key
+     * @return {@code this}
+     */
+    public @This @NonNull CommandMetaBuilder with(
+            final @NonNull CloudKey<Void> key
+    ) {
+        this.map.put(key, new Object());
+        return this;
+    }
+
+    /**
      * Builds a new {@link CommandMeta} instance using the stored {@code key}-{@code value} pairs.
      *
      * @return the instance
