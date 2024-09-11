@@ -172,6 +172,54 @@ public class CommandContext<C> implements MutableCloudKeyContainer {
     }
 
     /**
+     * Formats a {@code caption} using the given {@code formatter} and {@code recipient}.
+     *
+     * @param <T>       the message type produced by the formatter
+     * @param formatter the formatter
+     * @param recipient the recipient of the message.
+     * @param caption   the caption key
+     * @param variables the variables to use during formatting
+     * @return the formatted caption
+     */
+    public <T> @NonNull T formatCaption(
+            final @NonNull CaptionFormatter<C, T> formatter,
+            final @NonNull C recipient,
+            final @NonNull Caption caption,
+            final @NonNull CaptionVariable @NonNull... variables
+    ) {
+        return formatter.formatCaption(
+                caption,
+                recipient,
+                this.captionRegistry.caption(caption, recipient),
+                variables
+        );
+    }
+
+    /**
+     * Formats a {@code caption} using the given {@code formatter} and {@code recipient}.
+     *
+     * @param <T>       the message type produced by the formatter
+     * @param formatter the formatter
+     * @param recipient the recipient of the message.
+     * @param caption   the caption key
+     * @param variables the variables to use during formatting
+     * @return the formatted caption
+     */
+    public <T> @NonNull T formatCaption(
+            final @NonNull CaptionFormatter<C, T> formatter,
+            final @NonNull C recipient,
+            final @NonNull Caption caption,
+            final @NonNull List<@NonNull CaptionVariable> variables
+    ) {
+        return formatter.formatCaption(
+                caption,
+                recipient,
+                this.captionRegistry.caption(caption, recipient),
+                variables
+        );
+    }
+
+    /**
      * Returns the sender that executed the command.
      *
      * @return the command sender
