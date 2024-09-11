@@ -31,6 +31,7 @@ import org.incendo.cloud.TestCommandSender;
 import org.incendo.cloud.execution.ExecutionCoordinator;
 import org.incendo.cloud.internal.CommandNode;
 import org.incendo.cloud.internal.CommandRegistrationHandler;
+import org.incendo.cloud.parser.flag.CommandFlag;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -104,6 +105,25 @@ class StandardCommandSyntaxFormatterTest {
         final String formatted = this.formatter.apply(
                 new TestCommandSender(), Collections.emptyList(), rootNode);
         assertThat(formatted).isEqualTo(" all");
+    }
+
+    @Test
+    void respectsFlagPermissions() {
+        final Command.Builder<TestCommandSender> root = this.manager.commandBuilder("root");
+        this.manager.command(
+                root.flag(CommandFlag.builder("some_flag").withPermission("some_permission").build())
+                        .handler(ctx -> {})
+        );
+
+        final CommandNode<TestCommandSender> rootNode = this.manager.commandTree().getNamedNode("root");
+
+        final String permittedFormatted = this.formatter.apply(
+                new TestCommandSender("some_permission"), Collections.emptyList(), rootNode);
+        assertThat(permittedFormatted).isEqualTo(" [--some_flag]");
+
+        final String formatted = this.formatter.apply(
+                new TestCommandSender(), Collections.emptyList(), rootNode);
+        assertThat(formatted).isEqualTo("");
     }
 
     static final class SpecificTestCommandSender extends TestCommandSender {

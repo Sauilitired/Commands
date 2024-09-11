@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import org.apiguardian.api.API;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -76,7 +77,7 @@ public class StandardCommandSyntaxFormatter<C> implements CommandSyntaxFormatter
             final @NonNull List<@NonNull CommandComponent<C>> commandComponents,
             final @Nullable CommandNode<C> node
     ) {
-        return this.apply(commandComponents, node, n -> {
+        return this.apply(sender, commandComponents, node, n -> {
             if (sender == null) {
                 return true;
             }
@@ -95,7 +96,9 @@ public class StandardCommandSyntaxFormatter<C> implements CommandSyntaxFormatter
         });
     }
 
+    @SuppressWarnings("unchecked")
     private @NonNull String apply(
+            final @Nullable C sender,
             final @NonNull List<@NonNull CommandComponent<C>> commandComponents,
             final @Nullable CommandNode<C> node,
             final @NonNull Predicate<@NonNull CommandNode<C>> filter
@@ -110,7 +113,7 @@ public class StandardCommandSyntaxFormatter<C> implements CommandSyntaxFormatter
                 final AggregateParser<?, ?> aggregateParser = (AggregateParser<?, ?>) commandComponent.parser();
                 formattingInstance.appendAggregate(commandComponent, aggregateParser);
             } else if (commandComponent.type() == CommandComponent.ComponentType.FLAG) {
-                formattingInstance.appendFlag((CommandFlagParser<?>) commandComponent.parser());
+                formattingInstance.appendFlag(this.filterFlagsByPermission(sender, (CommandFlagParser<C>) commandComponent.parser()));
             } else {
                 if (commandComponent.required()) {
                     formattingInstance.appendRequired(commandComponent);
@@ -163,8 +166,12 @@ public class StandardCommandSyntaxFormatter<C> implements CommandSyntaxFormatter
                 formattingInstance.appendBlankSpace();
                 formattingInstance.appendAggregate(component, aggregateParser);
             } else if (component.type() == CommandComponent.ComponentType.FLAG) {
-                formattingInstance.appendBlankSpace();
-                formattingInstance.appendFlag((CommandFlagParser<?>) component.parser());
+                final List<CommandFlag<?>> flags = this.filterFlagsByPermission(sender, (CommandFlagParser<C>) component.parser());
+
+                if (!flags.isEmpty()) {
+                    formattingInstance.appendBlankSpace();
+                    formattingInstance.appendFlag(flags);
+                }
             } else if (component.type() == CommandComponent.ComponentType.LITERAL) {
                 formattingInstance.appendBlankSpace();
                 formattingInstance.appendLiteral(component);
@@ -190,6 +197,16 @@ public class StandardCommandSyntaxFormatter<C> implements CommandSyntaxFormatter
         return new FormattingInstance();
     }
 
+    private List<CommandFlag<?>> filterFlagsByPermission(
+            final @Nullable C sender,
+            final @NonNull CommandFlagParser<C> flagParser
+    ) {
+        return flagParser
+                .flags()
+                .stream()
+                .filter(flag -> sender == null || this.manager.testPermission(sender, flag.permission()).allowed())
+                .collect(Collectors.toList());
+    }
 
     /**
      * Instance that is used when building command syntax
@@ -251,14 +268,12 @@ public class StandardCommandSyntaxFormatter<C> implements CommandSyntaxFormatter
         /**
          * Appends a flag argument
          *
-         * @param flagParser flag parser
+         * @param flags the flags to append
          */
-        public void appendFlag(final @NonNull CommandFlagParser<?> flagParser) {
+        public void appendFlag(final @NonNull Iterable<CommandFlag<?>> flags) {
             this.builder.append(this.optionalPrefix());
 
-            final Iterator<CommandFlag<?>> flagIterator = flagParser
-                    .flags()
-                    .iterator();
+            final Iterator<CommandFlag<?>> flagIterator = flags.iterator();
 
             while (flagIterator.hasNext()) {
                 final CommandFlag<?> flag = flagIterator.next();
