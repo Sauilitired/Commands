@@ -25,13 +25,12 @@ package org.incendo.cloud.parser.standard;
 
 import java.time.Duration;
 import java.util.Collections;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.apiguardian.api.API;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.incendo.cloud.caption.CaptionVariable;
 import org.incendo.cloud.caption.StandardCaptionKeys;
 import org.incendo.cloud.component.CommandComponent;
@@ -45,6 +44,8 @@ import org.incendo.cloud.suggestion.BlockingSuggestionProvider;
 
 /**
  * Parser for {@link Duration}.
+ *
+ * <p>Matches durations in the format of: <code>2d15h7m12s</code>.</p>
  *
  * @param <C> command sender type
  */
@@ -73,11 +74,6 @@ public final class DurationParser<C> implements ArgumentParser<C, Duration>, Blo
         return CommandComponent.<C, Duration>builder().parser(durationParser());
     }
 
-    /**
-     * Matches durations in the format of: <code>2d15h7m12s</code>
-     */
-    private static final Pattern DURATION_PATTERN = Pattern.compile("(([1-9][0-9]+|[1-9])[dhms])");
-
     @Override
     public @NonNull ArgumentParseResult<Duration> parse(
             final @NonNull CommandContext<C> commandContext,
@@ -85,30 +81,55 @@ public final class DurationParser<C> implements ArgumentParser<C, Duration>, Blo
     ) {
         final String input = commandInput.readString();
 
-        final Matcher matcher = DURATION_PATTERN.matcher(input);
-
         Duration duration = Duration.ofNanos(0);
 
-        while (matcher.find()) {
-            String group = matcher.group();
-            String timeUnit = String.valueOf(group.charAt(group.length() - 1));
-            int timeValue = Integer.parseInt(group.substring(0, group.length() - 1));
-            switch (timeUnit) {
-                case "d":
-                    duration = duration.plusDays(timeValue);
-                    break;
-                case "h":
-                    duration = duration.plusHours(timeValue);
-                    break;
-                case "m":
-                    duration = duration.plusMinutes(timeValue);
-                    break;
-                case "s":
-                    duration = duration.plusSeconds(timeValue);
-                    break;
-                default:
-                    return ArgumentParseResult.failure(new DurationParseException(input, commandContext));
+        // substring range enclosing digits and unit (single char)
+        int rangeStart = 0;
+        int cursor = 0;
+
+        while (cursor < input.length()) {
+            // advance cursor until time unit or we reach end of input (in which case it's invalid anyway)
+            while (cursor < input.length() && Character.isDigit(input.charAt(cursor))) {
+                cursor += 1;
             }
+
+            // reached end of input with no time unit
+            if (cursor == input.length()) {
+                return ArgumentParseResult.failure(new DurationParseException(input, commandContext));
+            }
+
+            final long timeValue;
+            try {
+                timeValue = Long.parseLong(input.substring(rangeStart, cursor));
+            } catch (final NumberFormatException ex) {
+                return ArgumentParseResult.failure(new DurationParseException(ex, input, commandContext));
+            }
+
+            final char timeUnit = input.charAt(cursor);
+            try {
+                switch (timeUnit) {
+                    case 'd':
+                        duration = duration.plusDays(timeValue);
+                        break;
+                    case 'h':
+                        duration = duration.plusHours(timeValue);
+                        break;
+                    case 'm':
+                        duration = duration.plusMinutes(timeValue);
+                        break;
+                    case 's':
+                        duration = duration.plusSeconds(timeValue);
+                        break;
+                    default:
+                        return ArgumentParseResult.failure(new DurationParseException(input, commandContext));
+                }
+            } catch (final ArithmeticException ex) {
+                return ArgumentParseResult.failure(new DurationParseException(ex, input, commandContext));
+            }
+
+            // skip unit, reset rangeStart to start of next segment
+            cursor += 1;
+            rangeStart = cursor;
         }
 
         if (duration.isZero()) {
@@ -164,6 +185,28 @@ public final class DurationParser<C> implements ArgumentParser<C, Duration>, Blo
                 final @NonNull CommandContext<?> context
         ) {
             super(
+                    DurationParser.class,
+                    context,
+                    StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_DURATION,
+                    CaptionVariable.of("input", input)
+            );
+            this.input = input;
+        }
+
+        /**
+         * Construct a new {@link DurationParseException} with a causing exception.
+         *
+         * @param cause   cause of exception
+         * @param input   input string
+         * @param context command context
+         */
+        public DurationParseException(
+                final @Nullable Throwable cause,
+                final @NonNull String input,
+                final @NonNull CommandContext<?> context
+        ) {
+            super(
+                    cause,
                     DurationParser.class,
                     context,
                     StandardCaptionKeys.ARGUMENT_PARSE_FAILURE_DURATION,

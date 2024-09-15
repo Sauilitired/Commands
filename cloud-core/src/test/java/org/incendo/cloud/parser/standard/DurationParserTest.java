@@ -75,15 +75,50 @@ class DurationParserTest {
     }
 
     @Test
-    void invalid_format_failing() {
+    void invalid_format_no_time_value() {
         Assertions.assertThrows(
                 CompletionException.class,
                 () -> manager.commandExecutor().executeCommand(new TestCommandSender(), "duration d").join()
         );
+    }
 
+    @Test
+    void invalid_format_no_time_unit() {
+        Assertions.assertThrows(
+                CompletionException.class,
+                () -> manager.commandExecutor().executeCommand(new TestCommandSender(), "duration 1").join()
+        );
+    }
+
+    @Test
+    void invalid_format_invalid_unit() {
         Assertions.assertThrows(
                 CompletionException.class,
                 () -> manager.commandExecutor().executeCommand(new TestCommandSender(), "duration 1x").join()
+        );
+    }
+
+    @Test
+    void invalid_format_leading_garbage() {
+        Assertions.assertThrows(
+                CompletionException.class,
+                () -> manager.commandExecutor().executeCommand(new TestCommandSender(), "duration foo1d").join()
+        );
+    }
+
+    @Test
+    void invalid_format_garbage() {
+        Assertions.assertThrows(
+                CompletionException.class,
+                () -> manager.commandExecutor().executeCommand(new TestCommandSender(), "duration 1dfoo2h").join()
+        );
+    }
+
+    @Test
+    void invalid_format_trailing_garbage() {
+        Assertions.assertThrows(
+                CompletionException.class,
+                () -> manager.commandExecutor().executeCommand(new TestCommandSender(), "duration 1dfoo").join()
         );
     }
 }
