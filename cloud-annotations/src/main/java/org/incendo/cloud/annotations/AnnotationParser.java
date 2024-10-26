@@ -989,6 +989,16 @@ public final class AnnotationParser<C> {
         }
 
         if (commandDescriptor.requiredSender() != Object.class) {
+            if (!GenericTypeReflector.isSuperType(this.commandSenderType.getType(), commandDescriptor.requiredSender())) {
+                throw new IllegalArgumentException(String.format(
+                        "Command method %s#%s(%s) has invalid sender type requirement: %s does not inherit from %s",
+                        method.getDeclaringClass().getName(),
+                        method.getName(),
+                        Arrays.stream(method.getParameterTypes()).map(Class::getName).collect(Collectors.joining(", ")),
+                        commandDescriptor.requiredSender().getName(),
+                        this.commandSenderType.getType().getTypeName()
+                ));
+            }
             builder = builder.senderType((Class<? extends C>) commandDescriptor.requiredSender());
         } else if (senderType != null) {
             builder = builder.senderType(senderType);

@@ -36,9 +36,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class RequiredSenderDeductionTest {
+class RequiredSenderTest {
 
     private CommandManager<SuperSender<?>> commandManager;
+    private AnnotationParser<SuperSender<?>> annotationParser;
 
     @BeforeEach
     void setup() {
@@ -54,12 +55,12 @@ class RequiredSenderDeductionTest {
                 return true;
             }
         };
-        AnnotationParser<SuperSender<?>> annotationParser = new AnnotationParser<>(
+        this.annotationParser = new AnnotationParser<>(
                 this.commandManager,
                 new TypeToken<SuperSender<?>>() {
                 }
         );
-        annotationParser.parse(new TestClassA());
+        this.annotationParser.parse(new TestClassA());
     }
 
     @Test
@@ -83,6 +84,14 @@ class RequiredSenderDeductionTest {
         );
     }
 
+    @Test
+    void testInvalidRequirement() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> this.annotationParser.parse(new InvalidSenderRequirementTest())
+        );
+    }
+
 
     static class TestClassA {
 
@@ -101,5 +110,11 @@ class RequiredSenderDeductionTest {
 
 
     public static class IntegerSender implements SuperSender<Integer> {
+    }
+
+    static class InvalidSenderRequirementTest {
+        @Command(value = "invalid_command", requiredSender = String.class)
+        public void badSenderTypeNoParams() {
+        }
     }
 }
