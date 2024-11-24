@@ -252,11 +252,15 @@ private class KotlinMethodArgumentParser<C, T>(
 
     @Suppress("UNCHECKED_CAST")
     private fun <T> CompletableFuture<*>.mapResult(): CompletableFuture<ArgumentParseResult<T>> =
-        thenApply {
-            when (it) {
-                null -> ArgumentParseResult.failure(IllegalArgumentException("Result not found"))
-                is ArgumentParseResult<*> -> it as ArgumentParseResult<T>
-                else -> ArgumentParseResult.success((it as T)!!)
+        handle { result, exception ->
+            if (exception != null) {
+                ArgumentParseResult.failure(exception)
+            } else {
+                when (result) {
+                    null -> ArgumentParseResult.failure(IllegalArgumentException("Result not found"))
+                    is ArgumentParseResult<*> -> result as ArgumentParseResult<T>
+                    else -> ArgumentParseResult.success((result as T)!!)
+                }
             }
         }
 }
