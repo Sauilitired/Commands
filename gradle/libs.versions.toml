@@ -24,7 +24,7 @@ coroutines = "1.8.1"
 ktlint = "0.50.0"
 
 # testing
-jupiterEngine = "5.11.0"
+jupiterEngine = "5.11.4"
 mockitoCore = "4.11.0"
 mockitoKotlin = "4.1.0"
 mockitoJupiter = "4.11.0"
