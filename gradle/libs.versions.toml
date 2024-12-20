@@ -32,7 +32,7 @@ truth = "1.4.2"
 compileTesting = "0.21.0"
 
 # build-logic
-cloud-build-logic = "0.0.15"
+cloud-build-logic = "0.0.16"
 
 [libraries]
 checkerQual = { group = "org.checkerframework", name = "checker-qual", version.ref = "checkerQual" }
