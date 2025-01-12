@@ -2,8 +2,11 @@ import com.diffplug.gradle.spotless.SpotlessExtension
 import net.kyori.indra.IndraExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.tasks.bundling.Jar
+import org.gradle.kotlin.dsl.attributes
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.withType
 import org.incendo.cloudbuildlogic.CloudSpotlessExtension
 
 class CloudBaseConventions : Plugin<Project> {
@@ -42,6 +45,12 @@ class CloudBaseConventions : Plugin<Project> {
             "compileOnly"(libs.errorproneAnnotations)
 
             "checkstyle"(libs.stylecheck)
+        }
+
+        target.tasks.withType(Jar::class).configureEach {
+            manifest {
+                attributes("Automatic-Module-Name" to "%s.%s".format(target.group, target.name.replace('-', '.')))
+            }
         }
     }
 }
